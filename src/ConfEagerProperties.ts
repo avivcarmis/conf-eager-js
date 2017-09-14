@@ -1,13 +1,9 @@
 import {ConfEagerProperty} from "./ConfEagerProperty";
 import {DefaultValue, PropertyName} from "./ConfEager";
-import {ConfEagerError} from "./ConfEagerError";
+import {IllegalPropertyValueError} from "./ConfEagerErrors";
 const NUMBER_PARSER = Number;
 
 export namespace ConfEagerProperties {
-
-    import error = ConfEagerError.error;
-
-    import Type = ConfEagerError.Type;
 
     // Utils
 
@@ -19,15 +15,13 @@ export namespace ConfEagerProperties {
         if (value == "false" || value == "0") {
             return false;
         }
-        throw error(Type.ILLEGAL_PROPERTY_VALUE_ERROR,
-            "could not parse boolean from value `%s`", value);
+        throw new IllegalPropertyValueError("boolean", value);
     }
 
     function numberMapper(value: string): number {
         const result = NUMBER_PARSER(value.trim().toLowerCase());
         if (isNaN(result)) {
-            throw error(Type.ILLEGAL_PROPERTY_VALUE_ERROR,
-                "could not parse number from value `%s`", value);
+            throw new IllegalPropertyValueError("number", value);
         }
         return result;
     }
@@ -152,8 +146,7 @@ export namespace ConfEagerProperties {
                     }
                 }
             }
-            throw error(Type.ILLEGAL_PROPERTY_VALUE_ERROR,
-                "could not parse enum from value `%s`", value);
+            throw new IllegalPropertyValueError("enum", value);
         }
 
 

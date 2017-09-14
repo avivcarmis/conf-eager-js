@@ -7,9 +7,7 @@
  * implementing {@link #map(String)}.
  */
 import {DefaultValue, PropertyName} from "./ConfEager";
-import {ConfEagerError} from "./ConfEagerError";
-import Type = ConfEagerError.Type;
-import error = ConfEagerError.error;
+import {ReadBeforeWriteError} from "./ConfEagerErrors";
 
 export abstract class ConfEagerProperty<T> {
 
@@ -44,9 +42,7 @@ export abstract class ConfEagerProperty<T> {
      */
     public get(): T {
         if (this._value === null) {
-            throw error(Type.READ_BEFORE_WRITE_ERROR, "cannot read configuration" +
-                " property %s before it has been populated, bind the configuration" +
-                " instance first.", this._propertyName);
+            throw new ReadBeforeWriteError(this._propertyName!);
         }
         return this._value;
     }

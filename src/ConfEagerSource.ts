@@ -11,9 +11,7 @@
  */
 import {ConfEager} from "./ConfEager";
 import {ConfEagerProperty} from "./ConfEagerProperty";
-import {ConfEagerError} from "./ConfEagerError";
-import error = ConfEagerError.error;
-import Type = ConfEagerError.Type;
+import {MissingPropertiesError} from "./ConfEagerErrors";
 
 export abstract class ConfEagerSource {
 
@@ -81,8 +79,7 @@ export abstract class ConfEagerSource {
             }
         }
         if (missingProperties.length > 0) {
-            throw error(Type.MISSING_PROPERTIES_ERROR,
-                "confEager object missing properties: %s", missingProperties);
+            throw new MissingPropertiesError(missingProperties);
         }
     }
 
