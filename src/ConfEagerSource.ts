@@ -38,12 +38,10 @@ export abstract class ConfEagerSource {
         if (!this._confEagerMapping.get(confEagerObject)) {
             const properties: ConfEagerProperty<any>[] = [];
             for (const key of Object.keys(confEagerObject)) {
-                if (confEagerObject.defaultPropertyFilter(key)) {
-                    const property = (confEagerObject as any)[key];
-                    if (property && property instanceof ConfEagerProperty) {
-                        (property as ConfEagerProperty<any>)._setFieldName(key);
-                        properties.push(property);
-                    }
+                const property = (confEagerObject as any)[key];
+                if (property && property instanceof ConfEagerProperty) {
+                    (property as ConfEagerProperty<any>)._reportPropertyKey(key);
+                    properties.push(property);
                 }
             }
             this.populate(confEagerObject, properties);
@@ -54,10 +52,18 @@ export abstract class ConfEagerSource {
     // Private
 
     /**
+     * Extracts the String value of a property. No parsing needed.
+     *
+     * @param propertyName the name of the property to extract.
+     * @return the String value of a property
+     */
+    abstract _get(propertyName: string): string | null | undefined;
+
+    /**
      * Must be called whenever the source data changes, in order to propagate
      * changes to all bound {@link ConfEager} instances.
      */
-    protected notifyUpdate():void {
+    protected notifyUpdate(): void {
         for (const [key, value] of this._confEagerMapping) {
             this.populate(key, value);
         }
@@ -66,29 +72,20 @@ export abstract class ConfEagerSource {
     private populate(confEagerObject: ConfEager, properties: ConfEagerProperty<any>[]): void {
         const missingProperties: string[] = [];
         for (const property of properties) {
-            const env = confEagerObject.defaultEnvironment();
-            const propertyName = (env == null ? "" : env) + property._getPropertyName();
+            const propertyName = confEagerObject._prefix() + property._getPropertyKey();
             const value = this._get(propertyName);
-            if (value === null) {
+            if (value === null || typeof value == "undefined") {
                 if (property._isRequired()) {
                     missingProperties.push("`" + propertyName + "`");
                 }
             }
             else {
-                property._update(value);
+                property._update(value.toString());
             }
         }
         if (missingProperties.length > 0) {
             throw new MissingPropertiesError(missingProperties);
         }
     }
-
-    /**
-     * Extracts the String value of a property. No parsing needed.
-     *
-     * @param propertyName the name of the property to extract.
-     * @return the String value of a property
-     */
-    abstract _get(propertyName: string): string | null;
 
 }

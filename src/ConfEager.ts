@@ -13,41 +13,13 @@
  * {@link #defaultFieldFilter(Field)} method which may be overridden.
  *
  * Additionally, a prefix may be set to all of the property names by overriding
- * {@link #defaultEnvironment()} method. This may be used to discriminate between
+ * {@link #_prefix()} method. This may be used to discriminate between
  * different development environments.
  */
 export abstract class ConfEager {
 
-    // Private
-
-    public defaultEnvironment(): string {
+    public _prefix(): string {
         return "";
     }
-
-    public defaultPropertyFilter(_key: string): boolean {
-        return true;
-    }
-
-    // Static
-
-    protected static defaultValue<T>(value: T): DefaultValue<T> {
-        return new DefaultValue(value);
-    }
-
-    protected static propertyName(name: string): PropertyName {
-        return new PropertyName(name);
-    }
-
-}
-
-export class DefaultValue<T> {
-
-    constructor(readonly value: T) {}
-
-}
-
-export class PropertyName {
-
-    constructor(readonly name: string) {}
 
 }

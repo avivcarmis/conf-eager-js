@@ -1,3 +1,5 @@
+import {ReadBeforeWriteError} from "./ConfEagerErrors";
+
 /**
  * Represents a configuration property.
  * Concrete classes that inherit this class should be used as fields of a
@@ -6,33 +8,21 @@
  * Custom property types may easily be created by inheriting this class and
  * implementing {@link #map(String)}.
  */
-import {DefaultValue, PropertyName} from "./ConfEager";
-import {ReadBeforeWriteError} from "./ConfEagerErrors";
-
 export abstract class ConfEagerProperty<T> {
 
     // Properties
 
-    private readonly _required: boolean;
+    private _required: boolean;
 
-    private _propertyName: string|null;
+    private _propertyKey: string | null;
 
-    private _value: T|null;
+    private _value: T | null;
 
     // Constructors
 
-    constructor(defaultValue?: DefaultValue<T>, propertyName?: PropertyName) {
-        if (defaultValue) {
-            this._required = false;
-            this._value = defaultValue.value;
-        }
-        else {
-            this._required = true;
-            this._value = null;
-        }
-        if (propertyName) {
-            this._propertyName = propertyName.name;
-        }
+    constructor() {
+        this._required = true;
+        this._value = null;
     }
 
     // Public
@@ -42,9 +32,20 @@ export abstract class ConfEagerProperty<T> {
      */
     public get(): T {
         if (this._value === null) {
-            throw new ReadBeforeWriteError(this._propertyName!);
+            throw new ReadBeforeWriteError(this._propertyKey!);
         }
         return this._value;
+    }
+
+    public withDefaultValue(value: T): this {
+        this._required = false;
+        this._value = value;
+        return this;
+    }
+
+    public withPropertyKey(key: string): this {
+        this._propertyKey = key;
+        return this;
     }
 
     // Private
@@ -53,14 +54,14 @@ export abstract class ConfEagerProperty<T> {
         this._value = this.map(value);
     }
 
-    public _setFieldName(fieldName: string): void {
-        if (this._propertyName == null) {
-            this._propertyName = fieldName;
+    public _reportPropertyKey(fieldName: string): void {
+        if (this._propertyKey == null) {
+            this._propertyKey = fieldName;
         }
     }
 
-    public _getPropertyName(): string {
-        return this._propertyName!;
+    public _getPropertyKey(): string {
+        return this._propertyKey!;
     }
 
     public _isRequired(): boolean {

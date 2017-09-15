@@ -3,7 +3,7 @@ import {expect} from "chai";
 import {ConfEagerSource} from "../src/ConfEagerSource";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {ReadBeforeWriteError} from "../src/ConfEagerErrors";
+import {MissingPropertiesError} from "../src/ConfEagerErrors";
 
 class Source extends ConfEagerSource {
 
@@ -11,7 +11,7 @@ class Source extends ConfEagerSource {
         super();
     }
 
-    _get(propertyName: string): string | null {
+    _get(propertyName: string): string | null | undefined {
         return this.map[propertyName];
     }
 
@@ -19,7 +19,7 @@ class Source extends ConfEagerSource {
 
 describe("Test binding settings", () => {
 
-    it('Basic test', () => {
+    it('Test simple binding', () => {
 
         class Conf extends ConfEager {
 
@@ -34,22 +34,37 @@ describe("Test binding settings", () => {
 
     });
 
-    it('Test property filter', () => {
+    it('Test configuration prefix', () => {
 
         class Conf extends ConfEager {
 
-            readonly ignored = new ConfEagerProperties.Boolean();
+            readonly property = new ConfEagerProperties.Boolean();
 
-            public defaultPropertyFilter(_key: string): boolean {
-                return false;
+            public _prefix(): string {
+                return "some.prefix.";
             }
 
         }
 
-        const source = new Source({"ignored": "true"});
+        const source = new Source({"some.prefix.property": "true"});
         const conf = new Conf();
         source.bind(conf);
-        expect(() => conf.ignored.get()).to.throw(ReadBeforeWriteError);
+        expect(conf.property.get()).to.equal(true);
+
+    });
+
+    it('Test missing property', () => {
+
+        class Conf extends ConfEager {
+
+            // noinspection JSUnusedGlobalSymbols
+            readonly property = new ConfEagerProperties.Boolean();
+
+        }
+
+        const source = new Source({});
+        const conf = new Conf();
+        expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
 
     });
 

@@ -1,6 +1,6 @@
 import {ConfEagerProperty} from "./ConfEagerProperty";
-import {DefaultValue, PropertyName} from "./ConfEager";
 import {IllegalPropertyValueError} from "./ConfEagerErrors";
+
 const NUMBER_PARSER = Number;
 
 export namespace ConfEagerProperties {
@@ -24,6 +24,27 @@ export namespace ConfEagerProperties {
             throw new IllegalPropertyValueError("number", value);
         }
         return result;
+    }
+
+    function enumMapper<T>(caseSensitive: boolean, enumClass: T, value: string): T {
+        if (caseSensitive) {
+            const result = (enumClass as any)[value];
+            if (typeof result != "undefined") {
+                return result;
+            }
+        }
+        else {
+            for (const key of Object.keys(enumClass)) {
+                if (!isNaN(NUMBER_PARSER(key))) {
+                    // numeric, this is a value not a key
+                    continue;
+                }
+                if (key.toLowerCase() == value.trim().toLowerCase()) {
+                    return (enumClass as any)[key];
+                }
+            }
+        }
+        throw new IllegalPropertyValueError("enum", value);
     }
 
     export abstract class Array<T> extends ConfEagerProperty<T[]> {
@@ -80,6 +101,22 @@ export namespace ConfEagerProperties {
     }
 
     /**
+     * Out of the box ConfEagerProperty that maps boolean array values.
+     */
+    export class Enum<T> extends ConfEagerProperty<T> {
+
+        constructor(private readonly enumClass: T,
+                    private readonly caseSensitive: boolean = false) {
+            super();
+        }
+
+        protected map(value: string): T {
+            return enumMapper(this.caseSensitive, this.enumClass, value);
+        }
+
+    }
+
+    /**
      * Out of the box ConfEagerProperty that maps string array values.
      */
     export class StringArray extends Array<string> {
@@ -115,40 +152,16 @@ export namespace ConfEagerProperties {
     /**
      * Out of the box ConfEagerProperty that maps boolean array values.
      */
-    export class Enum<T> extends ConfEagerProperty<T> {
+    export class EnumArray<T> extends Array<T> {
 
-        private readonly _enumClass: T;
-
-        private readonly _caseSensitive: boolean;
-
-        constructor(enumClass: T, caseSensitive: boolean, defaultValue?: DefaultValue<T>,
-                    propertyName?: PropertyName) {
-            super(defaultValue, propertyName);
-            this._enumClass = enumClass;
-            this._caseSensitive = caseSensitive;
+        constructor(private readonly enumClass: T,
+                    private readonly caseSensitive: boolean = false) {
+            super();
         }
 
-        protected map(value: string): T {
-            if (this._caseSensitive) {
-                const result = (this._enumClass as any)[value];
-                if (typeof result != "undefined") {
-                    return result;
-                }
-            }
-            else {
-                for (const key of Object.keys(this._enumClass)) {
-                    if (!isNaN(NUMBER_PARSER(key))) {
-                        // numeric, this is a value not a key
-                        continue;
-                    }
-                    if (key.toLowerCase() == value.trim().toLowerCase()) {
-                        return (this._enumClass as any)[key];
-                    }
-                }
-            }
-            throw new IllegalPropertyValueError("enum", value);
+        protected mapElement(value: string): T {
+            return enumMapper(this.caseSensitive, this.enumClass, value);
         }
-
 
     }
 

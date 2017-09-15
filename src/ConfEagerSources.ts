@@ -7,7 +7,7 @@ export namespace ConfEagerSources {
      */
     export class EnvironmentVariables extends ConfEagerSource {
 
-        _get(propertyName: string): string | null {
+        _get(propertyName: string): string | null | undefined {
             const value = process.env[propertyName];
             return value ? value : null;
         }
@@ -28,7 +28,7 @@ export namespace ConfEagerSources {
             this._sources = sources;
         }
 
-        _get(propertyName: string): string | null {
+        _get(propertyName: string): string | null | undefined {
             for (const source of this._sources) {
                 const value = source._get(propertyName);
                 if (value != null) {
