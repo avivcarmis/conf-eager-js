@@ -3,9 +3,9 @@ import {expect} from "chai";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerSources} from "../src/ConfEagerSources";
-import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
 import {MissingPropertiesError} from "../src/ConfEagerErrors";
 import {ConfEagerSource} from "../src/ConfEagerSource";
+import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
 import Combinator = ConfEagerSources.Combinator;
 
 describe("Test out-of-the-box sources", () => {
