@@ -1,38 +1,32 @@
-/**
- * Represents a source of configuration,
- * this may be for example system properties or environment variables which
- * are available by default, or MySQL, Consul or any other source, by simply
- * extending this class and implementing methods.
- *
- * To create a custom source, implement {@link #getValueOrNull(String)} method,
- * and call {@link #notifyUpdate()} whenever the data in the source has changed,
- * this will automatically update all the {@link ConfEager} classes that are bound
- * to this source.
- */
 import {ConfEager} from "./ConfEager";
 import {ConfEagerProperty} from "./ConfEagerProperty";
 import {MissingPropertiesError} from "./ConfEagerErrors";
 
+/**
+ * Represents a source of configuration,
+ * this may be, for example, environment variables, MySQL, configuration file,
+ * or any other source.
+ *
+ * A fully customized configuration source may be created by implementing
+ * ConfEagerSource._get method, which returns a string value of a given
+ * configuration property key, and implementing ConfEagerSource.notifyUpdate
+ * whenever the data in the source has changed.
+ * The latter will automatically update all the ConfEager classes that
+ * are bound to this source.
+ */
 export abstract class ConfEagerSource {
 
     // Fields
 
-    private readonly _confEagerMapping: Map<ConfEager, ConfEagerProperty<any>[]>;
-
-    // Constructors
-
-    constructor() {
-        this._confEagerMapping = new Map();
-    }
+    private readonly _confEagerMapping = new Map<ConfEager, ConfEagerProperty<any>[]>();
 
     // Public
 
     /**
-     * Receive a {@link ConfEager} instance and bind it to the current source.
-     *
+     * Receive a ConfEager instance and bind it to the current source.
      * Whenever the source changes, all bound instances are automatically updated.
      *
-     * @param confEagerObject instance to bind
+     * @param {ConfEager} confEagerObject   instance to bind
      */
     public bind(confEagerObject: ConfEager): void {
         if (!this._confEagerMapping.get(confEagerObject)) {
@@ -40,11 +34,11 @@ export abstract class ConfEagerSource {
             for (const key of Object.keys(confEagerObject)) {
                 const property = (confEagerObject as any)[key];
                 if (property && property instanceof ConfEagerProperty) {
-                    (property as ConfEagerProperty<any>)._reportPropertyKey(key);
+                    (property as any)._reportPropertyKey(key);
                     properties.push(property);
                 }
             }
-            this.populate(confEagerObject, properties);
+            this._populate(confEagerObject, properties);
             this._confEagerMapping.set(confEagerObject, properties);
         }
     }
@@ -52,35 +46,37 @@ export abstract class ConfEagerSource {
     // Private
 
     /**
-     * Extracts the String value of a property. No parsing needed.
-     *
-     * @param propertyName the name of the property to extract.
-     * @return the String value of a property
-     */
-    abstract _get(propertyName: string): string | null | undefined;
-
-    /**
-     * Must be called whenever the source data changes, in order to propagate
-     * changes to all bound {@link ConfEager} instances.
+     * Should be called whenever the source data changes,
+     * triggers a re-population of  all bound ConfEager instances.
      */
     protected notifyUpdate(): void {
         for (const [key, value] of this._confEagerMapping) {
-            this.populate(key, value);
+            this._populate(key, value);
         }
     }
 
-    private populate(confEagerObject: ConfEager, properties: ConfEagerProperty<any>[]): void {
+    /**
+     * Extracts the String value of a property. No parsing needed.
+     *
+     * @param {string} propertyKey  the key of the property to extract
+     * @returns {string}
+     * @private
+     */
+    protected abstract _get(propertyKey: string): string | null | undefined;
+
+    private _populate(instance: ConfEager, properties: ConfEagerProperty<any>[]): void {
         const missingProperties: string[] = [];
         for (const property of properties) {
-            const propertyName = confEagerObject._prefix() + property._getPropertyKey();
+            const propertyName = (instance as any)._prefix() +
+                (property as any)._getPropertyKey();
             const value = this._get(propertyName);
             if (value === null || typeof value == "undefined") {
-                if (property._isRequired()) {
+                if ((property as any)._isRequired()) {
                     missingProperties.push("`" + propertyName + "`");
                 }
             }
             else {
-                property._update(value.toString());
+                (property as any)._update(value.toString());
             }
         }
         if (missingProperties.length > 0) {

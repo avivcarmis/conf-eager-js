@@ -2,28 +2,21 @@ import {ReadBeforeWriteError} from "./ConfEagerErrors";
 
 /**
  * Represents a configuration property.
- * Concrete classes that inherit this class should be used as fields of a
- * {@link ConfEager} implementation.
+ * Concrete classes that inherit this class should be used as
+ * properties of a ConfEager inheritor.
  *
- * Custom property types may easily be created by inheriting this class and
- * implementing {@link #map(String)}.
+ * Custom property types may easily be created by inheriting
+ * this class and implementing ConfEagerProperty.map method.
  */
 export abstract class ConfEagerProperty<T> {
 
     // Properties
 
-    private _required: boolean;
+    private _required = true;
 
-    private _propertyKey: string | null;
+    private _propertyKey: string | null = null;
 
-    private _value: T | null;
-
-    // Constructors
-
-    constructor() {
-        this._required = true;
-        this._value = null;
-    }
+    private _value: T | null = null;
 
     // Public
 
@@ -37,12 +30,24 @@ export abstract class ConfEagerProperty<T> {
         return this._value;
     }
 
+    /**
+     * Sets a default value for the property, and makes it non-required.
+     *
+     * @param value     the default value to use
+     * @returns {this}
+     */
     public withDefaultValue(value: T): this {
         this._required = false;
         this._value = value;
         return this;
     }
 
+    /**
+     * Overrides the key to look for in the configuration source.
+     *
+     * @param {string} key  the key to set
+     * @returns {this}
+     */
     public withPropertyKey(key: string): this {
         this._propertyKey = key;
         return this;
@@ -50,22 +55,22 @@ export abstract class ConfEagerProperty<T> {
 
     // Private
 
-    public _update(value: string): void {
-        this._value = this.map(value);
-    }
-
-    public _reportPropertyKey(fieldName: string): void {
+    /**
+     * Must be called by the configuration source on binding this property,
+     * and before populating it. This reports the property name to use,
+     * in case no explicit property name already set.
+     *
+     * @param {string} propertyKey  the property key to use
+     * @private
+     */
+    protected _reportPropertyKey(propertyKey: string): void {
         if (this._propertyKey == null) {
-            this._propertyKey = fieldName;
+            this._propertyKey = propertyKey;
         }
     }
 
-    public _getPropertyKey(): string {
-        return this._propertyKey!;
-    }
-
-    public _isRequired(): boolean {
-        return this._required;
+    protected _update(value: string): void {
+        this._value = this.map(value);
     }
 
     /**
@@ -73,5 +78,15 @@ export abstract class ConfEagerProperty<T> {
      * @return the parsed value to be stored.
      */
     protected abstract map(value: string): T;
+
+    // Etc
+
+    protected _getPropertyKey(): string {
+        return this._propertyKey!;
+    }
+
+    protected _isRequired(): boolean {
+        return this._required;
+    }
 
 }

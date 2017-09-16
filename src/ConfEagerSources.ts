@@ -1,5 +1,8 @@
 import {ConfEagerSource} from "./ConfEagerSource";
 
+/**
+ * Out of the box configuration sources.
+ */
 export namespace ConfEagerSources {
 
     /**
@@ -30,7 +33,7 @@ export namespace ConfEagerSources {
 
         _get(propertyName: string): string | null | undefined {
             for (const source of this._sources) {
-                const value = source._get(propertyName);
+                const value = (source as any)._get(propertyName);
                 if (value != null) {
                     return value;
                 }

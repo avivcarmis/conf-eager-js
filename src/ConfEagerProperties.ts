@@ -3,6 +3,10 @@ import {IllegalPropertyValueError} from "./ConfEagerErrors";
 
 const NUMBER_PARSER = Number;
 
+/**
+ * Out of the box configuration properties,
+ * contains implementation for all javascript primitives.
+ */
 export namespace ConfEagerProperties {
 
     // Utils
@@ -150,7 +154,7 @@ export namespace ConfEagerProperties {
     }
 
     /**
-     * Out of the box ConfEagerProperty that maps boolean array values.
+     * Out of the box ConfEagerProperty that maps enum array values.
      */
     export class EnumArray<T> extends Array<T> {
 

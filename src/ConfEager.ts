@@ -1,24 +1,25 @@
 /**
  * Represents a configuration class.
- * Each inheritor will declare it's configuration properties as the class fields,
- * each property must inherit {@link ConfEagerProperty}.
  *
- * Each declared property is looked for in the source by it's field name. To override it,
- * use {@link #propertyName(String)} method to explicitly declare the property name to look for.
+ * Each inheritor will declare it's configuration properties as
+ * the class fields, each property must inherit from ConfEagerProperty.
  *
- * Each declared property is required by default, to change it, use {@link #defaultValue(Object)}
- * method to explicitly declare what value should be used in case no value appears in the source.
+ * Each declared ConfEagerProperty property is looked for in the source
+ * by it's field name by default. To override it, use ConfEagerProperty.withPropertyKey
+ * method and explicitly declare the property name to look for.
  *
- * By default, static fields are ignored. Which fields get ignored are controlled by the
- * {@link #defaultFieldFilter(Field)} method which may be overridden.
+ * Each declared property is required by default, to change it,
+ * use ConfEagerProperty.withDefaultValue method to explicitly
+ * declare what value should be used in case no value appears in the source.
  *
- * Additionally, a prefix may be set to all of the property names by overriding
- * {@link #_prefix()} method. This may be used to discriminate between
- * different development environments.
+ * Additionally, a prefix may be set to all of the property names by
+ * overriding _prefix method. This may be used, for example, to discriminate
+ * between different development environments, or to connect configuration
+ * classes to certain areas of configuration files.
  */
 export abstract class ConfEager {
 
-    public _prefix(): string {
+    protected _prefix(): string {
         return "";
     }
 
