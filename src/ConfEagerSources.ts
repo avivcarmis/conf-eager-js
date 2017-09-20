@@ -2,6 +2,7 @@ import {ConfEagerSource} from "./ConfEagerSource";
 import * as fs from "fs";
 import {CouldNotParseConfigurationFileError} from "./ConfEagerErrors";
 import * as yaml from "yamljs";
+import * as properties from "properties";
 
 /**
  * Out of the box configuration sources.
@@ -14,6 +15,7 @@ export namespace ConfEagerSources {
     export abstract class FileSource extends ConfEagerSource {
 
         private _data: any;
+
         private _listener = () => this._triggerUpdate();
 
         constructor(private readonly _filename: string,
@@ -83,6 +85,22 @@ export namespace ConfEagerSources {
 
         protected parse(content: string) {
             return yaml.parse(content);
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from properties files (*.properties)
+     */
+    export class PropertiesFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return properties.parse(content, {path: false});
         }
 
     }

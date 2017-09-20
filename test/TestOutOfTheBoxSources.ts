@@ -11,6 +11,7 @@ import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
 import Combinator = ConfEagerSources.Combinator;
 import JsonFile = ConfEagerSources.JsonFile;
 import YamlFile = ConfEagerSources.YamlFile;
+import PropertiesFile = ConfEagerSources.PropertiesFile;
 
 describe("Test out-of-the-box sources", () => {
 
@@ -74,13 +75,13 @@ describe("Test out-of-the-box sources", () => {
                 const conf = new Conf();
                 source.bind(conf);
                 expect(conf.property.get()).to.equal(true);
-                writeFile(JSON.stringify({"property": false}));
                 source.onUpdate(() => {
                     expect(conf.property.get()).to.equal(false);
                     source.close();
                     cleanFile();
                     done();
                 });
+                writeFile(JSON.stringify({"property": false}));
 
             });
 
@@ -134,12 +135,73 @@ describe("Test out-of-the-box sources", () => {
                 const conf = new Conf();
                 source.bind(conf);
                 expect(conf.property.get()).to.equal(true);
-                writeFile(yaml.stringify({"property": false}));
                 source.onUpdate(() => {
                     expect(conf.property.get()).to.equal(false);
+                    source.close();
                     cleanFile();
                     done();
                 });
+                writeFile(yaml.stringify({"property": false}));
+
+            });
+
+        });
+
+        describe("Test properties file source", () => {
+
+            it('Test properties file success', () => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile("property = true");
+                const source = new PropertiesFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                cleanFile();
+
+            });
+
+            it('Test properties file failure', () => {
+
+                class Conf extends ConfEager {
+
+                    // noinspection JSUnusedGlobalSymbols
+                    readonly missingProperty = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile("");
+                const source = new PropertiesFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+
+            });
+
+            it('Test properties file watch', done => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile("property = true");
+                const source = new PropertiesFile(TEST_FILE_NAME, 1);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                source.onUpdate(() => {
+                    expect(conf.property.get()).to.equal(false);
+                    source.close();
+                    cleanFile();
+                    done();
+                });
+                writeFile("property: false\n");
 
             });
 
@@ -169,6 +231,7 @@ describe("Test out-of-the-box sources", () => {
 
             class Conf extends ConfEager {
 
+                // noinspection JSUnusedGlobalSymbols
                 readonly property = new ConfEagerProperties.Boolean();
 
             }
