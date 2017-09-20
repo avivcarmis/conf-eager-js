@@ -1,5 +1,5 @@
 import {ConfEagerProperty} from "./ConfEagerProperty";
-import {IllegalPropertyValueError} from "./ConfEagerErrors";
+import {ConfEagerErrors} from "./ConfEagerErrors";
 
 const NUMBER_PARSER = Number;
 const JSArray = Array;
@@ -11,6 +11,8 @@ const JSArray = Array;
 export namespace ConfEagerProperties {
 
     // Utils
+
+    import IllegalPropertyValueError = ConfEagerErrors.IllegalPropertyValueError;
 
     function booleanMapper(value: string): boolean {
         value = value.trim().toLowerCase();

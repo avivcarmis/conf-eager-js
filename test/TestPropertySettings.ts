@@ -3,7 +3,8 @@ import {expect} from "chai";
 import {ConfEagerSource} from "../src/ConfEagerSource";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {MissingPropertiesError} from "../src/ConfEagerErrors";
+import {ConfEagerErrors} from "../src/ConfEagerErrors";
+import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
 
 class Source extends ConfEagerSource {
 

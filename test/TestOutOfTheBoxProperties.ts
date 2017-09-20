@@ -3,7 +3,8 @@ import {expect} from "chai";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerSource} from "../src/ConfEagerSource";
-import {IllegalPropertyValueError} from "../src/ConfEagerErrors";
+import {ConfEagerErrors} from "../src/ConfEagerErrors";
+import IllegalPropertyValueError = ConfEagerErrors.IllegalPropertyValueError;
 
 class Source extends ConfEagerSource {
 
@@ -215,6 +216,7 @@ describe("Test out-of-the-box properties", () => {
 
             class Conf extends ConfEager {
 
+                // noinspection JSUnusedGlobalSymbols
                 readonly property = new ConfEagerProperties.Enum(Foo);
 
             }
@@ -244,6 +246,7 @@ describe("Test out-of-the-box properties", () => {
 
             class Conf extends ConfEager {
 
+                // noinspection JSUnusedGlobalSymbols
                 readonly property = new ConfEagerProperties.Enum(Foo, true);
 
             }
@@ -311,6 +314,7 @@ describe("Test out-of-the-box properties", () => {
 
             class Conf extends ConfEager {
 
+                // noinspection JSUnusedGlobalSymbols
                 readonly property = new ConfEagerProperties.EnumArray(Foo, true);
 
             }

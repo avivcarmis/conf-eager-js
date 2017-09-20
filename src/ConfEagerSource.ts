@@ -1,6 +1,7 @@
 import {ConfEager} from "./ConfEager";
 import {ConfEagerProperty} from "./ConfEagerProperty";
-import {MissingPropertiesError} from "./ConfEagerErrors";
+import {ConfEagerErrors} from "./ConfEagerErrors";
+import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
 
 /**
  * Represents a source of configuration,

@@ -3,8 +3,8 @@ import {expect} from "chai";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerSources} from "../src/ConfEagerSources";
-import {MissingPropertiesError} from "../src/ConfEagerErrors";
 import {ConfEagerSource} from "../src/ConfEagerSource";
+import {ConfEagerErrors} from "../src/ConfEagerErrors";
 import * as fs from "fs";
 import * as yaml from "yamljs";
 import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
@@ -12,6 +12,7 @@ import Combinator = ConfEagerSources.Combinator;
 import JsonFile = ConfEagerSources.JsonFile;
 import YamlFile = ConfEagerSources.YamlFile;
 import PropertiesFile = ConfEagerSources.PropertiesFile;
+import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
 
 describe("Test out-of-the-box sources", () => {
 

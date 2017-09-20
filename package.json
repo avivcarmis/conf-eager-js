@@ -2,14 +2,14 @@
   "name": "confeager",
   "version": "1.0.0",
   "description": "Strongly typed eager-initialization configuration library for JavaScript",
-  "main": "index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
     "test": "mocha dist/test",
     "compile": "npm run clean && tsc -p .",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "preparepublish": "tsc -p ./src --outDir ."
   },
   "repository": {
     "type": "git",

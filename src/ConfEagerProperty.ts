@@ -1,4 +1,5 @@
-import {ReadBeforeWriteError} from "./ConfEagerErrors";
+import {ConfEagerErrors} from "./ConfEagerErrors";
+import ReadBeforeWriteError = ConfEagerErrors.ReadBeforeWriteError;
 
 /**
  * Represents a configuration property.

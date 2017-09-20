@@ -1,6 +1,6 @@
 import {ConfEagerSource} from "./ConfEagerSource";
+import {ConfEagerErrors} from "./ConfEagerErrors";
 import * as fs from "fs";
-import {CouldNotParseConfigurationFileError} from "./ConfEagerErrors";
 import * as yaml from "yamljs";
 import * as properties from "properties";
 
@@ -8,6 +8,9 @@ import * as properties from "properties";
  * Out of the box configuration sources.
  */
 export namespace ConfEagerSources {
+
+    import CouldNotParseConfigurationFileError =
+        ConfEagerErrors.CouldNotParseConfigurationFileError;
 
     /**
      * Abstract base class for implementation of file based sources

@@ -1,5 +1,7 @@
 .idea/
 node_modules/
-dist/
+src/
+test/
+dist/test
 npm-debug.log
 temp
