@@ -8,6 +8,15 @@ export class IllegalPropertyValueError extends Error {
 
 }
 
+export class CouldNotParseConfigurationFileError extends Error {
+
+    constructor(filename: string, content: string) {
+        super(format("could not parse configuration file %s, with value %s",
+            filename, content));
+    }
+
+}
+
 export class MissingPropertiesError extends Error {
 
     constructor(properties: string[]) {

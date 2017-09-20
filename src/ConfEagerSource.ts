@@ -8,7 +8,7 @@ import {MissingPropertiesError} from "./ConfEagerErrors";
  * or any other source.
  *
  * A fully customized configuration source may be created by implementing
- * ConfEagerSource._get method, which returns a string value of a given
+ * ConfEagerSource.get method, which returns a string value of a given
  * configuration property key, and implementing ConfEagerSource.notifyUpdate
  * whenever the data in the source has changed.
  * The latter will automatically update all the ConfEager classes that
@@ -19,6 +19,8 @@ export abstract class ConfEagerSource {
     // Fields
 
     private readonly _confEagerMapping = new Map<ConfEager, ConfEagerProperty<any>[]>();
+
+    private readonly _onUpdateListeners: (() => void)[] = [];
 
     // Public
 
@@ -43,6 +45,14 @@ export abstract class ConfEagerSource {
         }
     }
 
+    /**
+     * Registers a listener to be called whenever the source is updated
+     * @param {() => void} listener to call
+     */
+    public onUpdate(listener: () => void) {
+        this._onUpdateListeners.push(listener);
+    }
+
     // Private
 
     /**
@@ -52,6 +62,9 @@ export abstract class ConfEagerSource {
     protected notifyUpdate(): void {
         for (const [key, value] of this._confEagerMapping) {
             this._populate(key, value);
+        }
+        for (const listener of this._onUpdateListeners) {
+            listener();
         }
     }
 
@@ -65,14 +78,14 @@ export abstract class ConfEagerSource {
      * @returns {string}
      * @private
      */
-    protected abstract _get(propertyKey: string): string | null | undefined;
+    protected abstract get(propertyKey: string): string | null | undefined;
 
     private _populate(instance: ConfEager, properties: ConfEagerProperty<any>[]): void {
         const missingProperties: string[] = [];
         for (const property of properties) {
             const propertyName = (instance as any)._prefix() +
                 (property as any)._getPropertyKey();
-            const value = this._get(propertyName);
+            const value = this.get(propertyName);
             if (value === null || typeof value == "undefined") {
                 if ((property as any)._isRequired()) {
                     missingProperties.push("`" + propertyName + "`");

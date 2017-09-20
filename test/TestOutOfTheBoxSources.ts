@@ -5,39 +5,180 @@ import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerSources} from "../src/ConfEagerSources";
 import {MissingPropertiesError} from "../src/ConfEagerErrors";
 import {ConfEagerSource} from "../src/ConfEagerSource";
+import * as fs from "fs";
+import * as yaml from "yamljs";
 import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
 import Combinator = ConfEagerSources.Combinator;
+import JsonFile = ConfEagerSources.JsonFile;
+import YamlFile = ConfEagerSources.YamlFile;
 
 describe("Test out-of-the-box sources", () => {
 
-    it('Test environment variable success', () => {
+    describe("Test file sources", () => {
 
-        class Conf extends ConfEager {
+        const TEST_FILE_NAME = "temp";
 
-            readonly property = new ConfEagerProperties.Boolean();
-
+        function writeFile(value: string) {
+            fs.writeFileSync(TEST_FILE_NAME, value);
         }
 
-        process.env["property"] = "true";
-        const source = new EnvironmentVariables();
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+        function cleanFile() {
+            fs.unlinkSync(TEST_FILE_NAME);
+        }
+
+        describe("Test JSON file source", () => {
+
+            it('Test JSON file success', () => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile(JSON.stringify({"property": true}));
+                const source = new JsonFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                cleanFile();
+
+            });
+
+            it('Test JSON file failure', () => {
+
+                class Conf extends ConfEager {
+
+                    // noinspection JSUnusedGlobalSymbols
+                    readonly missingProperty = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile("{}");
+                const source = new JsonFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+
+            });
+
+            it('Test JSON file watch', done => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile(JSON.stringify({"property": true}));
+                const source = new JsonFile(TEST_FILE_NAME, 1);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                writeFile(JSON.stringify({"property": false}));
+                source.onUpdate(() => {
+                    expect(conf.property.get()).to.equal(false);
+                    source.close();
+                    cleanFile();
+                    done();
+                });
+
+            });
+
+        });
+
+        describe("Test YAML file source", () => {
+
+            it('Test YAML file success', () => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile(yaml.stringify({"property": true}));
+                const source = new YamlFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                cleanFile();
+
+            });
+
+            it('Test YAML file failure', () => {
+
+                class Conf extends ConfEager {
+
+                    // noinspection JSUnusedGlobalSymbols
+                    readonly missingProperty = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile(yaml.stringify({}));
+                const source = new YamlFile(TEST_FILE_NAME, 0);
+                const conf = new Conf();
+                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+
+            });
+
+            it('Test YAML file watch', done => {
+
+                class Conf extends ConfEager {
+
+                    readonly property = new ConfEagerProperties.Boolean();
+
+                }
+
+                writeFile(yaml.stringify({"property": true}));
+                const source = new YamlFile(TEST_FILE_NAME, 1);
+                const conf = new Conf();
+                source.bind(conf);
+                expect(conf.property.get()).to.equal(true);
+                writeFile(yaml.stringify({"property": false}));
+                source.onUpdate(() => {
+                    expect(conf.property.get()).to.equal(false);
+                    cleanFile();
+                    done();
+                });
+
+            });
+
+        });
 
     });
 
-    it('Test environment variable failure', () => {
+    describe("Test environment variables", () => {
 
-        class Conf extends ConfEager {
+        it('Test environment variable success', () => {
 
-            readonly property = new ConfEagerProperties.Boolean();
+            class Conf extends ConfEager {
 
-        }
+                readonly property = new ConfEagerProperties.Boolean();
 
-        delete process.env["property"]; // in any case...
-        const source = new EnvironmentVariables();
-        const conf = new Conf();
-        expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+            }
+
+            process.env["property"] = "true";
+            const source = new EnvironmentVariables();
+            const conf = new Conf();
+            source.bind(conf);
+            expect(conf.property.get()).to.equal(true);
+
+        });
+
+        it('Test environment variable failure', () => {
+
+            class Conf extends ConfEager {
+
+                readonly property = new ConfEagerProperties.Boolean();
+
+            }
+
+            delete process.env["property"]; // in any case...
+            const source = new EnvironmentVariables();
+            const conf = new Conf();
+            expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+
+        });
 
     });
 
@@ -47,7 +188,8 @@ describe("Test out-of-the-box sources", () => {
 
         class EmptySource extends ConfEagerSource {
 
-            _get(_propertyName: string): string | any | any {
+            // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
+            protected get(_propertyKey: string): string | null | undefined {
                 visitedEmptySource = true;
                 return null;
             }
@@ -56,7 +198,8 @@ describe("Test out-of-the-box sources", () => {
 
         class NonEmptySource extends ConfEagerSource {
 
-            _get(_propertyName: string): string | any | any {
+            // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
+            protected get(_propertyName: string): string | null | undefined {
                 expect(visitedEmptySource).to.equal(true);
                 return "true";
             }

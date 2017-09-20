@@ -1,4 +1,7 @@
 import {ConfEagerSource} from "./ConfEagerSource";
+import * as fs from "fs";
+import {CouldNotParseConfigurationFileError} from "./ConfEagerErrors";
+import * as yaml from "yamljs";
 
 /**
  * Out of the box configuration sources.
@@ -6,11 +9,90 @@ import {ConfEagerSource} from "./ConfEagerSource";
 export namespace ConfEagerSources {
 
     /**
+     * Abstract base class for implementation of file based sources
+     */
+    export abstract class FileSource extends ConfEagerSource {
+
+        private _data: any;
+        private _listener = () => this._triggerUpdate();
+
+        constructor(private readonly _filename: string,
+                    private readonly _watchInterval: number,
+                    private readonly _encoding: string | null = null) {
+            super();
+            this._triggerUpdate();
+            if (this._watchInterval > 0) {
+                fs.watchFile(
+                    this._filename,
+                    {interval: this._watchInterval},
+                    this._listener
+                );
+            }
+        }
+
+        close() {
+            fs.unwatchFile(this._filename, this._listener);
+        }
+
+        protected abstract parse(content: string): any;
+
+        protected get(propertyKey: string): string | null | undefined {
+            return this._data ? this._data[propertyKey] : null;
+        }
+
+        private _triggerUpdate() {
+            const fileContents = fs
+                .readFileSync(this._filename, {encoding: this._encoding})
+                .toString();
+            try {
+                this._data = this.parse(fileContents);
+            } catch (e) {
+                throw new CouldNotParseConfigurationFileError(this._filename,
+                    fileContents);
+            }
+            this.notifyUpdate();
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from JSON files
+     */
+    export class JsonFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return JSON.parse(content);
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from YAML files (*.yaml | *.yml)
+     */
+    export class YamlFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return yaml.parse(content);
+        }
+
+    }
+
+    /**
      * Out of the box source to map Environment Variables
      */
     export class EnvironmentVariables extends ConfEagerSource {
 
-        _get(propertyName: string): string | null | undefined {
+        get(propertyName: string): string | null | undefined {
             const value = process.env[propertyName];
             return value ? value : null;
         }
@@ -31,9 +113,9 @@ export namespace ConfEagerSources {
             this._sources = sources;
         }
 
-        _get(propertyName: string): string | null | undefined {
+        get(propertyName: string): string | null | undefined {
             for (const source of this._sources) {
-                const value = (source as any)._get(propertyName);
+                const value = (source as any).get(propertyName);
                 if (value != null) {
                     return value;
                 }

@@ -11,7 +11,7 @@ class Source extends ConfEagerSource {
         super();
     }
 
-    _get(propertyName: string): string | null | undefined {
+    get(propertyName: string): string | null | undefined {
         return this.map[propertyName];
     }
 
@@ -40,7 +40,8 @@ describe("Test binding settings", () => {
 
             readonly property = new ConfEagerProperties.Boolean();
 
-            public _prefix(): string {
+            // noinspection JSMethodCanBeStatic
+            protected _prefix(): string {
                 return "some.prefix.";
             }
 

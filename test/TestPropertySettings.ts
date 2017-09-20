@@ -11,7 +11,7 @@ class Source extends ConfEagerSource {
         super();
     }
 
-    _get(propertyName: string): string | null | undefined {
+    get(propertyName: string): string | null | undefined {
         return this.map[propertyName];
     }
 

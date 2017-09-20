@@ -19,7 +19,7 @@ describe("Test update behaviour", () => {
                 this.notifyUpdate();
             }
 
-            _get(_propertyName: string): string | null | undefined {
+            get(_propertyName: string): string | null | undefined {
                 return this.value;
             }
 
