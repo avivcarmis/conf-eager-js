@@ -56,7 +56,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean array success', () => {
 
-            const source = new Source({"property": " true , false "});
+            const source = new Source({"property": "[true ,false]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([true, false]);
@@ -65,7 +65,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean array empty', () => {
 
-            const source = new Source({"property": " , "});
+            const source = new Source({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -119,7 +119,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number array success', () => {
 
-            const source = new Source({"property": " 1 , 5.7 "});
+            const source = new Source({"property": "[1 ,5.7]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([1, 5.7]);
@@ -128,7 +128,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number array empty', () => {
 
-            const source = new Source({"property": " , "});
+            const source = new Source({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -174,7 +174,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test string array success', () => {
 
-            const source = new Source({"property": " 1 , value "});
+            const source = new Source({"property": "[\"1\" ,\"value\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal(["1", "value"]);
@@ -183,7 +183,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test string array empty', () => {
 
-            const source = new Source({"property": " , "});
+            const source = new Source({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -268,7 +268,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test enum array success', () => {
 
-            const source = new Source({"property": " VALUE1 , VALUE2 "});
+            const source = new Source({"property": "[\"VALUE1\" , \"VALUE2\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([Foo.VALUE1, Foo.VALUE2]);
@@ -277,7 +277,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test enum array empty', () => {
 
-            const source = new Source({"property": " , "});
+            const source = new Source({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -300,7 +300,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "value1,Value2"});
+            const source = new Source({"property": "[\"value1\", \"Value2\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([Foo.VALUE1, Foo.VALUE2]);
@@ -315,7 +315,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "value1"});
+            const source = new Source({"property": "[value1]"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 

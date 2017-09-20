@@ -2,6 +2,7 @@ import {ConfEagerProperty} from "./ConfEagerProperty";
 import {IllegalPropertyValueError} from "./ConfEagerErrors";
 
 const NUMBER_PARSER = Number;
+const JSArray = Array;
 
 /**
  * Out of the box configuration properties,
@@ -54,15 +55,21 @@ export namespace ConfEagerProperties {
     export abstract class Array<T> extends ConfEagerProperty<T[]> {
 
         protected map(value: string): T[] {
-            const result = [];
-            for (let s of value.split(",")) {
-                const trimmed = s.trim();
-                if (trimmed == "") {
-                    continue;
+            try {
+                const array = JSON.parse(value);
+                if (array instanceof JSArray) {
+                    const result = [];
+                    for (const element of array) {
+                        if (element != null && typeof element != "undefined") {
+                            const mappedValue = this.mapElement(element.toString());
+                            result.push(mappedValue);
+                        }
+                    }
+                    return result;
                 }
-                result.push(this.mapElement(trimmed));
+            } catch (e) {
             }
-            return result;
+            throw new IllegalPropertyValueError("array", value);
         }
 
         protected abstract mapElement(value: string): T;

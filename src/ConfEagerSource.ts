@@ -56,7 +56,10 @@ export abstract class ConfEagerSource {
     }
 
     /**
-     * Extracts the String value of a property. No parsing needed.
+     * Extracts the String value of a property.
+     * To return an array or an object, a JSON representation string
+     * should be returned (i.e. "[1, 2, 3]" for array,
+     * "{\"key\": \"value\"}" for object.
      *
      * @param {string} propertyKey  the key of the property to extract
      * @returns {string}
