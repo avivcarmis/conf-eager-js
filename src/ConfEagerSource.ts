@@ -30,7 +30,7 @@ export abstract class ConfEagerSource {
      *
      * @param {ConfEager} confEagerObject   instance to bind
      */
-    public bind(confEagerObject: ConfEager): void {
+    bind(confEagerObject: ConfEager): void {
         if (!this._confEagerMapping.get(confEagerObject)) {
             const properties: ConfEagerProperty<any>[] = [];
             for (const key of Object.keys(confEagerObject)) {
@@ -49,7 +49,7 @@ export abstract class ConfEagerSource {
      * Registers a listener to be called whenever the source is updated
      * @param {() => void} listener to call
      */
-    public onUpdate(listener: () => void) {
+    onUpdate(listener: () => void) {
         this._onUpdateListeners.push(listener);
     }
 

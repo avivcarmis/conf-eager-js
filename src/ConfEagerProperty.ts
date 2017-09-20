@@ -23,7 +23,7 @@ export abstract class ConfEagerProperty<T> {
     /**
      * @return the configuration property value currently in memory
      */
-    public get(): T {
+    get(): T {
         if (this._value === null) {
             throw new ReadBeforeWriteError(this._propertyKey!);
         }
@@ -36,7 +36,7 @@ export abstract class ConfEagerProperty<T> {
      * @param value     the default value to use
      * @returns {this}
      */
-    public withDefaultValue(value: T): this {
+    withDefaultValue(value: T): this {
         this._required = false;
         this._value = value;
         return this;
@@ -48,7 +48,7 @@ export abstract class ConfEagerProperty<T> {
      * @param {string} key  the key to set
      * @returns {this}
      */
-    public withPropertyKey(key: string): this {
+    withPropertyKey(key: string): this {
         this._propertyKey = key;
         return this;
     }
