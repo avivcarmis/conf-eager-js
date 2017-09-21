@@ -75,21 +75,21 @@ export abstract class ConfEagerSource {
      * should be returned (i.e. "[1, 2, 3]" for array,
      * "{\"key\": \"value\"}" for object.
      *
-     * @param {string} propertyKey  the key of the property to extract
+     * @param {string[]} path  the path of keys of the requested value
      * @returns {string}
      * @private
      */
-    protected abstract get(propertyKey: string): string | null | undefined;
+    protected abstract get(path: string[]): string | null | undefined;
 
     private _populate(instance: ConfEager, properties: ConfEagerProperty<any>[]): void {
         const missingProperties: string[] = [];
         for (const property of properties) {
-            const propertyName = (instance as any)._prefix() +
-                (property as any)._getPropertyKey();
-            const value = this.get(propertyName);
+            const path = (instance as any).pathKeys();
+            path.push((property as any)._getPropertyKey());
+            const value = this.get(path);
             if (value === null || typeof value == "undefined") {
                 if ((property as any)._isRequired()) {
-                    missingProperties.push("`" + propertyName + "`");
+                    missingProperties.push("`" + path.join(".") + "`");
                 }
             }
             else {

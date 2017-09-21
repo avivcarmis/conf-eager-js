@@ -12,15 +12,31 @@
  * use ConfEagerProperty.withDefaultValue method to explicitly
  * declare what value should be used in case no value appears in the source.
  *
- * Additionally, a prefix may be set to all of the property names by
- * overriding _prefix method. This may be used, for example, to discriminate
- * between different development environments, or to connect configuration
- * classes to certain areas of configuration files.
+ * Additionally, a prefix path may be set to all of the property keys by
+ * overriding pathKeys method. This may be used to tell confeager to lookup
+ * property names in a specified path in the source. If for example the source
+ * is a YAML file that looks like that:
+ *
+ * dataCenter1:
+ *  staging:
+ *    url: http://staging.dc1.example.com
+ *  production:
+ *    url: http://production.dc1.example.com
+ * dataCenter2:
+ *  staging:
+ *    url: http://staging.dc2.example.com
+ *  production:
+ *    url: http://production.dc2.example.com
+ *
+ * and we would like to host the value of dataCenter1's staging, we may use
+ * pathKeys to return ["dataCenter1", "staging"] and have a single property
+ * called "url", then we would get the value of dataCenter1.staging.url
  */
 export abstract class ConfEager {
 
-    protected _prefix(): string {
-        return "";
+    // noinspection JSUnusedGlobalSymbols
+    protected pathKeys(): string[] {
+        return [];
     }
 
 }

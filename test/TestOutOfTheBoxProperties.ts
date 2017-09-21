@@ -2,21 +2,10 @@ import "mocha";
 import {expect} from "chai";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {ConfEagerSource} from "../src/ConfEagerSource";
 import {ConfEagerErrors} from "../src/ConfEagerErrors";
+import {ConfEagerSources} from "../src/ConfEagerSources";
 import IllegalPropertyValueError = ConfEagerErrors.IllegalPropertyValueError;
-
-class Source extends ConfEagerSource {
-
-    constructor(private readonly map: any) {
-        super();
-    }
-
-    get(propertyName: string): string | null | undefined {
-        return this.map[propertyName];
-    }
-
-}
+import StubSource = ConfEagerSources.StubSource;
 
 describe("Test out-of-the-box properties", () => {
 
@@ -30,7 +19,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean success', () => {
 
-            const source = new Source({"property": "true"});
+            const source = new StubSource({"property": "true"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.equal(true);
@@ -39,7 +28,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean failure', () => {
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -57,7 +46,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean array success', () => {
 
-            const source = new Source({"property": "[true ,false]"});
+            const source = new StubSource({"property": "[true ,false]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([true, false]);
@@ -66,7 +55,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean array empty', () => {
 
-            const source = new Source({"property": "[]"});
+            const source = new StubSource({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -75,7 +64,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test boolean array failure', () => {
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -93,7 +82,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number success', () => {
 
-            const source = new Source({"property": "15.3"});
+            const source = new StubSource({"property": "15.3"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.equal(15.3);
@@ -102,7 +91,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number failure', () => {
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -120,7 +109,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number array success', () => {
 
-            const source = new Source({"property": "[1 ,5.7]"});
+            const source = new StubSource({"property": "[1 ,5.7]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([1, 5.7]);
@@ -129,7 +118,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number array empty', () => {
 
-            const source = new Source({"property": "[]"});
+            const source = new StubSource({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -138,7 +127,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test number array failure', () => {
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -156,7 +145,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test string success', () => {
 
-            const source = new Source({"property": "value"});
+            const source = new StubSource({"property": "value"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.equal("value");
@@ -175,7 +164,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test string array success', () => {
 
-            const source = new Source({"property": "[\"1\" ,\"value\"]"});
+            const source = new StubSource({"property": "[\"1\" ,\"value\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal(["1", "value"]);
@@ -184,7 +173,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test string array empty', () => {
 
-            const source = new Source({"property": "[]"});
+            const source = new StubSource({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -205,7 +194,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "VALUE1"});
+            const source = new StubSource({"property": "VALUE1"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.equal(Foo.VALUE1);
@@ -221,7 +210,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -235,7 +224,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "value1"});
+            const source = new StubSource({"property": "value1"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.equal(Foo.VALUE1);
@@ -251,7 +240,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "value1"});
+            const source = new StubSource({"property": "value1"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -271,7 +260,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test enum array success', () => {
 
-            const source = new Source({"property": "[\"VALUE1\" , \"VALUE2\"]"});
+            const source = new StubSource({"property": "[\"VALUE1\" , \"VALUE2\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([Foo.VALUE1, Foo.VALUE2]);
@@ -280,7 +269,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test enum array empty', () => {
 
-            const source = new Source({"property": "[]"});
+            const source = new StubSource({"property": "[]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get().length).to.equal(0);
@@ -289,7 +278,7 @@ describe("Test out-of-the-box properties", () => {
 
         it('Test enum array failure', () => {
 
-            const source = new Source({"property": "illegal value"});
+            const source = new StubSource({"property": "illegal value"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 
@@ -303,7 +292,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "[\"value1\", \"Value2\"]"});
+            const source = new StubSource({"property": "[\"value1\", \"Value2\"]"});
             const conf = new Conf();
             source.bind(conf);
             expect(conf.property.get()).to.deep.equal([Foo.VALUE1, Foo.VALUE2]);
@@ -319,7 +308,7 @@ describe("Test out-of-the-box properties", () => {
 
             }
 
-            const source = new Source({"property": "[value1]"});
+            const source = new StubSource({"property": "[value1]"});
             const conf = new Conf();
             expect(() => source.bind(conf)).to.throw(IllegalPropertyValueError);
 

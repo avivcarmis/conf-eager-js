@@ -253,7 +253,7 @@ describe("Test out-of-the-box sources", () => {
         class EmptySource extends ConfEagerSource {
 
             // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
-            protected get(_propertyKey: string): string | null | undefined {
+            protected get(_path: string[]): string | null | undefined {
                 visitedEmptySource = true;
                 return null;
             }
@@ -263,7 +263,7 @@ describe("Test out-of-the-box sources", () => {
         class NonEmptySource extends ConfEagerSource {
 
             // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
-            protected get(_propertyName: string): string | null | undefined {
+            protected get(_path: string[]): string | null | undefined {
                 expect(visitedEmptySource).to.equal(true);
                 return "true";
             }

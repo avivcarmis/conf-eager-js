@@ -12,6 +12,20 @@ export namespace ConfEagerSources {
     import CouldNotParseConfigurationFileError =
         ConfEagerErrors.CouldNotParseConfigurationFileError;
 
+    // Utils
+
+    export function extractPath(data: any, path: string[]): string | null {
+        if (path.length == 0) {
+            return data;
+        }
+        if (!data) {
+            return null;
+        }
+        return extractPath(data[path[0]], path.slice(1));
+    }
+
+    // Sources
+
     /**
      * Abstract base class for implementation of file based sources
      */
@@ -41,8 +55,15 @@ export namespace ConfEagerSources {
 
         protected abstract parse(content: string): any;
 
-        protected get(propertyKey: string): string | null | undefined {
-            return this._data ? this._data[propertyKey] : null;
+        protected get(path: string[]): string | null | undefined {
+            const value = extractPath(this._data, path);
+            if (value == null || typeof value == "undefined") {
+                return null;
+            }
+            if (typeof value == "object") {
+                return JSON.stringify(value);
+            }
+            return value.toString();
         }
 
         private _triggerUpdate() {
@@ -113,8 +134,8 @@ export namespace ConfEagerSources {
      */
     export class EnvironmentVariables extends ConfEagerSource {
 
-        get(propertyName: string): string | null | undefined {
-            const value = process.env[propertyName];
+        protected get(path: string[]): string | null | undefined {
+            const value = extractPath(process.env, path);
             return value ? value : null;
         }
 
@@ -134,14 +155,36 @@ export namespace ConfEagerSources {
             this._sources = sources;
         }
 
-        get(propertyName: string): string | null | undefined {
+        protected get(path: string[]): string | null | undefined {
             for (const source of this._sources) {
-                const value = (source as any).get(propertyName);
+                const value = (source as any).get(path);
                 if (value != null) {
                     return value;
                 }
             }
             return null;
+        }
+
+    }
+
+    /**
+     * Out of the box source to map a given data object
+     */
+    export class StubSource extends ConfEagerSource {
+
+        constructor(private readonly _data: any) {
+            super();
+        }
+
+        protected get(path: string[]): string | null | undefined {
+            const value = extractPath(this._data, path);
+            if (value == null || typeof value == "undefined") {
+                return null;
+            }
+            if (typeof value == "object") {
+                return JSON.stringify(value);
+            }
+            return value.toString();
         }
 
     }

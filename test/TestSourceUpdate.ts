@@ -19,7 +19,8 @@ describe("Test update behaviour", () => {
                 this.notifyUpdate();
             }
 
-            get(_propertyName: string): string | null | undefined {
+            // noinspection JSUnusedLocalSymbols, JSUnusedGlobalSymbols
+            protected get(_path: string[]): string | null | undefined {
                 return this.value;
             }
 

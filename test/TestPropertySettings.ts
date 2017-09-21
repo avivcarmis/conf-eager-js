@@ -1,22 +1,11 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEagerSource} from "../src/ConfEagerSource";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerErrors} from "../src/ConfEagerErrors";
+import {ConfEagerSources} from "../src/ConfEagerSources";
 import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
-
-class Source extends ConfEagerSource {
-
-    constructor(private readonly map: any) {
-        super();
-    }
-
-    get(propertyName: string): string | null | undefined {
-        return this.map[propertyName];
-    }
-
-}
+import StubSource = ConfEagerSources.StubSource;
 
 describe("Test property settings", () => {
 
@@ -28,7 +17,7 @@ describe("Test property settings", () => {
 
         }
 
-        const source = new Source({"property": "true"});
+        const source = new StubSource({"property": "true"});
         const conf = new Conf();
         source.bind(conf);
         expect(conf.property.get()).to.equal(true);
@@ -44,7 +33,7 @@ describe("Test property settings", () => {
 
         }
 
-        const source = new Source({});
+        const source = new StubSource({});
         const conf = new Conf();
         source.bind(conf);
         expect(conf.property.get()).to.equal(true);
@@ -60,7 +49,7 @@ describe("Test property settings", () => {
 
         }
 
-        const source = new Source({"some.key": "true"});
+        const source = new StubSource({"some.key": "true"});
         const conf = new Conf();
         source.bind(conf);
         expect(conf.property.get()).to.equal(true);
@@ -77,7 +66,7 @@ describe("Test property settings", () => {
 
         }
 
-        const source = new Source({"property": "true"});
+        const source = new StubSource({"property": "true"});
         const conf = new Conf();
         expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
 
@@ -95,13 +84,13 @@ describe("Test property settings", () => {
         }
 
         // test default value
-        const source1 = new Source({});
+        const source1 = new StubSource({});
         const conf1 = new Conf();
         source1.bind(conf1);
         expect(conf1.property.get()).to.equal(true);
 
         // test property key
-        const source2 = new Source({"some.key": "false"});
+        const source2 = new StubSource({"some.key": "false"});
         const conf2 = new Conf();
         source2.bind(conf2);
         expect(conf2.property.get()).to.equal(false);

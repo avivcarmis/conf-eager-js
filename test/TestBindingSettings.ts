@@ -1,22 +1,11 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEagerSource} from "../src/ConfEagerSource";
 import {ConfEager} from "../src/ConfEager";
 import {ConfEagerProperties} from "../src/ConfEagerProperties";
 import {ConfEagerErrors} from "../src/ConfEagerErrors";
+import {ConfEagerSources} from "../src/ConfEagerSources";
 import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
-
-class Source extends ConfEagerSource {
-
-    constructor(private readonly map: any) {
-        super();
-    }
-
-    get(propertyName: string): string | null | undefined {
-        return this.map[propertyName];
-    }
-
-}
+import StubSource = ConfEagerSources.StubSource;
 
 describe("Test binding settings", () => {
 
@@ -28,27 +17,27 @@ describe("Test binding settings", () => {
 
         }
 
-        const source = new Source({"property": "true"});
+        const source = new StubSource({"property": "true"});
         const conf = new Conf();
         source.bind(conf);
         expect(conf.property.get()).to.equal(true);
 
     });
 
-    it('Test configuration prefix', () => {
+    it('Test configuration pathKeys', () => {
 
         class Conf extends ConfEager {
 
             readonly property = new ConfEagerProperties.Boolean();
 
-            // noinspection JSMethodCanBeStatic
-            protected _prefix(): string {
-                return "some.prefix.";
+            // noinspection JSMethodCanBeStatic, JSUnusedGlobalSymbols
+            protected pathKeys(): string[] {
+                return ["some", "prefix"];
             }
 
         }
 
-        const source = new Source({"some.prefix.property": "true"});
+        const source = new StubSource({"some": {"prefix": {"property": "true"}}});
         const conf = new Conf();
         source.bind(conf);
         expect(conf.property.get()).to.equal(true);
@@ -64,7 +53,7 @@ describe("Test binding settings", () => {
 
         }
 
-        const source = new Source({});
+        const source = new StubSource({});
         const conf = new Conf();
         expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
 
