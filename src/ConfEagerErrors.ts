@@ -22,7 +22,7 @@ export namespace ConfEagerErrors {
     export class MissingPropertiesError extends Error {
 
         constructor(properties: string[]) {
-            super(format("confEager object missing properties: %s",
+            super(format("confEager source missing properties: %s",
                 properties.join(", ")));
         }
 
