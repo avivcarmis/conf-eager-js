@@ -2,6 +2,9 @@
   "name": "confeager",
   "version": "1.0.0",
   "description": "Strongly typed eager-initialization configuration library for JavaScript",
+  "engines": {
+    "node": ">=6.11.2"
+  },
   "main": "dist/src/main.js",
   "typings": "dist/src/main",
   "directories": {
