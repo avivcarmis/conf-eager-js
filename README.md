@@ -181,7 +181,7 @@ ConfEagerJS follows a [big sister project for Java](https://github.com/avivcarmi
 - [The project build Status at Travis CI](https://travis-ci.org/avivcarmis/conf-eager-js "The project build Status at Travis CI")
 
 ## License
-Go-To-Guy is registered under <a href=/LICENSE.txt target="_blank">MIT</a> license.
+ConfEagerJS is registered under <a href=/LICENSE.txt target="_blank">MIT</a> license.
 
 ## Contribution
 Really, any kind of contribution will be warmly accepted. (:
