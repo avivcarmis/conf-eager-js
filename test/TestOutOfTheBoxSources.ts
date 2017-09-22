@@ -142,29 +142,6 @@ describe("Test out-of-the-box sources", () => {
 
         });
 
-        it('Test file watch', done => {
-
-            class Conf extends ConfEager {
-
-                readonly property = new ConfEagerProperties.Boolean();
-
-            }
-
-            writeFile(JSON.stringify({"property": true}));
-            const source = new JsonFile(TEST_FILE_NAME, 1);
-            const conf = new Conf();
-            source.bind(conf);
-            expect(conf.property.get()).to.equal(true);
-            source.onUpdate(() => {
-                expect(conf.property.get()).to.equal(false);
-                source.close();
-                cleanFile();
-                done();
-            });
-            writeFile(JSON.stringify({"property": false}));
-
-        });
-
     });
 
     describe("Test environment variables", () => {
