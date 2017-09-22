@@ -13,13 +13,13 @@ Installation via NPM:
 
 Consider a YAML configuration file `config.yaml`:
 ```yaml
-host: 0.0.0.0                 # string
-port: 8080                     # number
-https: false                    # boolean
-logLevel: INFO             # enum
+host: 0.0.0.0           # string
+port: 8080              # number
+https: false            # boolean
+logLevel: INFO          # enum
 nestedConfiguration:    # object
   nestedProperty: 1234
-arrayConfiguration:       # array
+arrayConfiguration:     # array
   - 1234
   - 2345
 ```
@@ -89,13 +89,13 @@ const conf = new Configuration();
 source.bind(conf);
 
 // that's it, let's use it!
-conf.host.get();                                                    // => "0.0.0.0"
-conf.port.get();                                                     // => 8080
-conf.useHttps.get();                                             // => false
-conf.logLevel.get();                                              // => LogLevel.INFO
+conf.host.get();                                // => "0.0.0.0"
+conf.port.get();                                // => 8080
+conf.useHttps.get();                            // => false
+conf.logLevel.get();                            // => LogLevel.INFO
 conf.nestedConfiguration.nestedProperty.get();  // => 1234
-conf.arrayConfiguration.get();                              // => [1234, 2345]
-conf.optionalProperty.get();                                 // => "value"
+conf.arrayConfiguration.get();                  // => [1234, 2345]
+conf.optionalProperty.get();                    // => "value"
 ```
 Or a consumer writtem in TypeScript:
 
@@ -155,13 +155,13 @@ const conf = new Configuration();
 source.bind(conf);
 
 // that's it, let's use it!
-conf.host.get();                                                    // => "0.0.0.0"
-conf.port.get();                                                     // => 8080
-conf.useHttps.get();                                             // => false
-conf.logLevel.get();                                              // => LogLevel.INFO
+conf.host.get();                                // => "0.0.0.0"
+conf.port.get();                                // => 8080
+conf.useHttps.get();                            // => false
+conf.logLevel.get();                            // => LogLevel.INFO
 conf.nestedConfiguration.nestedProperty.get();  // => 1234
-conf.arrayConfiguration.get();                              // => [1234, 2345]
-conf.optionalProperty.get();                                 // => "value"
+conf.arrayConfiguration.get();                  // => [1234, 2345]
+conf.optionalProperty.get();                    // => "value"
 ```
 
 Full documentation can be found on the project [WIKI on GitHub](https://github.com/avivcarmis/conf-eager-js/wiki "WIKI on GitHub").
