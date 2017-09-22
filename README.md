@@ -3,7 +3,7 @@
 [![ConfEagerJs Build Status at Travis CI](https://api.travis-ci.org/avivcarmis/conf-eager-js.svg?branch=master)]("https://api.travis-ci.org/avivcarmis/conf-eager-js.svg?branch=master")
 
 ConfEagerJS is an eager, strongly-typed configuration library for JavaScript, designed to maximize runtime safety, while maintaining lightweight, easy integration and dynamic nature.
-More on the motivation for this project [can be found below](#Why? "can be found below").
+More on the motivation for this project [can be found below](#why "can be found below").
 
 ## Quick Start
 
