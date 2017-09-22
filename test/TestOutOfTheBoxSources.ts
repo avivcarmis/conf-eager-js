@@ -60,29 +60,7 @@ describe("Test out-of-the-box sources", () => {
                 const source = new JsonFile(TEST_FILE_NAME, 0);
                 const conf = new Conf();
                 expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
-
-            });
-
-            it('Test JSON file watch', done => {
-
-                class Conf extends ConfEager {
-
-                    readonly property = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile(JSON.stringify({"property": true}));
-                const source = new JsonFile(TEST_FILE_NAME, 1);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
-                source.onUpdate(() => {
-                    expect(conf.property.get()).to.equal(false);
-                    source.close();
-                    cleanFile();
-                    done();
-                });
-                writeFile(JSON.stringify({"property": false}));
+                cleanFile();
 
             });
 
@@ -120,29 +98,7 @@ describe("Test out-of-the-box sources", () => {
                 const source = new YamlFile(TEST_FILE_NAME, 0);
                 const conf = new Conf();
                 expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
-
-            });
-
-            it('Test YAML file watch', done => {
-
-                class Conf extends ConfEager {
-
-                    readonly property = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile(yaml.stringify({"property": true}));
-                const source = new YamlFile(TEST_FILE_NAME, 1);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
-                source.onUpdate(() => {
-                    expect(conf.property.get()).to.equal(false);
-                    source.close();
-                    cleanFile();
-                    done();
-                });
-                writeFile(yaml.stringify({"property": false}));
+                cleanFile();
 
             });
 
@@ -180,31 +136,32 @@ describe("Test out-of-the-box sources", () => {
                 const source = new PropertiesFile(TEST_FILE_NAME, 0);
                 const conf = new Conf();
                 expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+                cleanFile();
 
             });
 
-            it('Test properties file watch', done => {
+        });
 
-                class Conf extends ConfEager {
+        it('Test file watch', done => {
 
-                    readonly property = new ConfEagerProperties.Boolean();
+            class Conf extends ConfEager {
 
-                }
+                readonly property = new ConfEagerProperties.Boolean();
 
-                writeFile("property = true");
-                const source = new PropertiesFile(TEST_FILE_NAME, 1);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
-                source.onUpdate(() => {
-                    expect(conf.property.get()).to.equal(false);
-                    source.close();
-                    cleanFile();
-                    done();
-                });
-                writeFile("property: false\n");
+            }
 
+            writeFile(JSON.stringify({"property": true}));
+            const source = new JsonFile(TEST_FILE_NAME, 1);
+            const conf = new Conf();
+            source.bind(conf);
+            expect(conf.property.get()).to.equal(true);
+            source.onUpdate(() => {
+                expect(conf.property.get()).to.equal(false);
+                source.close();
+                cleanFile();
+                done();
             });
+            writeFile(JSON.stringify({"property": false}));
 
         });
 
