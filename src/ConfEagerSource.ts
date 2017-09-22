@@ -36,9 +36,21 @@ export abstract class ConfEagerSource {
             const properties: ConfEagerProperty<any>[] = [];
             for (const key of Object.keys(confEagerObject)) {
                 const property = (confEagerObject as any)[key];
-                if (property && property instanceof ConfEagerProperty) {
+                if (!property) {
+                    continue;
+                }
+                if (property instanceof ConfEagerProperty) {
                     (property as any)._reportPropertyKey(key);
                     properties.push(property);
+                }
+                if (property instanceof ConfEager) {
+                    const currentKeys = (property as any).pathKeys();
+                    if (currentKeys.length == 0) {
+                        const newKeys = (confEagerObject as any).pathKeys();
+                        newKeys.push(key);
+                        (property as any).pathKeys = () => newKeys;
+                    }
+                    this.bind(property);
                 }
             }
             this._populate(confEagerObject, properties);
