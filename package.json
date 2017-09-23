@@ -6,7 +6,7 @@
     "node": ">=6.11.2"
   },
   "main": "dist/src/main.js",
-  "typings": "dist/src/main",
+  "types": "dist/src/main.d.ts",
   "directories": {
     "test": "test"
   },
