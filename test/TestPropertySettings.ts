@@ -1,99 +1,125 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEager} from "../src/ConfEager";
-import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {ConfEagerErrors} from "../src/ConfEagerErrors";
-import {ConfEagerSources} from "../src/ConfEagerSources";
-import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
+import {ConfEagerSources} from "../src/ConfEagerSource";
+import {exposed} from "smoke-screen";
 import StubSource = ConfEagerSources.StubSource;
 
 describe("Test property settings", () => {
 
-    it('Test default settings', () => {
+    class DefaultConf {
 
-        class Conf extends ConfEager {
+        @exposed
+        readonly property: boolean;
 
-            readonly property = new ConfEagerProperties.Boolean();
+    }
 
-        }
+    describe("Test optional property", () => {
 
-        const source = new StubSource({"property": "true"});
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+        it("Test optional property failure", () => {
 
-    });
+            const source = new StubSource({});
+            expect(() => source.create(DefaultConf)).to.throw(Error);
 
-    it('Test default value', () => {
+        });
 
-        class Conf extends ConfEager {
+        it("Test optional property success", () => {
 
-            readonly property = new ConfEagerProperties.Boolean()
-                .withDefaultValue(true);
+            class Conf {
 
-        }
+                @exposed({defaultValue: true})
+                readonly property: boolean;
 
-        const source = new StubSource({});
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+            }
 
-    });
+            const source = new StubSource({});
+            const conf = source.create(Conf);
+            expect(conf.property).to.equal(true);
 
-    it('Test custom property key', () => {
-
-        class Conf extends ConfEager {
-
-            readonly property =
-                new ConfEagerProperties.Boolean().withPropertyKey("some.key");
-
-        }
-
-        const source = new StubSource({"some.key": "true"});
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+        });
 
     });
 
-    it('Test property name failure', () => {
+    describe("Test property key", () => {
 
-        class Conf extends ConfEager {
+        it("Test property key failure", () => {
 
-            // noinspection JSUnusedGlobalSymbols
-            readonly property =
-                new ConfEagerProperties.Boolean().withPropertyKey("some.key");
+            const source = new StubSource({customKey: true});
+            expect(() => source.create(DefaultConf)).to.throw(Error);
 
-        }
+        });
 
-        const source = new StubSource({"property": "true"});
-        const conf = new Conf();
-        expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+        it("Test property key success", () => {
+
+            class Conf {
+
+                @exposed({as: "customKey"})
+                readonly property: boolean;
+
+            }
+
+            const source = new StubSource({customKey: true});
+            const conf = source.create(Conf);
+            expect(conf.property).to.equal(true);
+
+        });
 
     });
 
-    it('Test combination', () => {
+    describe("Test nullable property", () => {
 
-        class Conf extends ConfEager {
+        it("Test nullable property failure", () => {
 
-            // noinspection JSUnusedGlobalSymbols
-            readonly property = new ConfEagerProperties.Boolean()
-                .withPropertyKey("some.key")
-                .withDefaultValue(true);
+            const source = new StubSource({property: null});
+            expect(() => source.create(DefaultConf)).to.throw(Error);
+
+        });
+
+        it("Test nullable property success", () => {
+
+            class Conf {
+
+                @exposed({nullable: true})
+                readonly property: boolean;
+
+            }
+
+            const source = new StubSource({property: null});
+            const conf = source.create(Conf);
+            expect(conf.property).to.equal(null);
+
+        });
+
+    });
+
+    describe("Test property validation", () => {
+
+        class Conf {
+
+            @exposed({
+                validator: value => {
+                    if (value !== true) {
+                        throw new Error("must be true");
+                    }
+                }
+            })
+            readonly property: boolean;
 
         }
 
-        // test default value
-        const source1 = new StubSource({});
-        const conf1 = new Conf();
-        source1.bind(conf1);
-        expect(conf1.property.get()).to.equal(true);
+        it("Test property validation failure", () => {
 
-        // test property key
-        const source2 = new StubSource({"some.key": "false"});
-        const conf2 = new Conf();
-        source2.bind(conf2);
-        expect(conf2.property.get()).to.equal(false);
+            const source = new StubSource({property: false});
+            expect(() => source.create(Conf)).to.throw(Error);
+
+        });
+
+        it("Test property validation success", () => {
+
+            const source = new StubSource({property: true});
+            const conf = source.create(Conf);
+            expect(conf.property).to.equal(true);
+
+        });
 
     });
 

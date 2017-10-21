@@ -1,20 +1,24 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEager} from "../src/ConfEager";
-import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {ConfEagerSources} from "../src/ConfEagerSources";
-import {ConfEagerSource} from "../src/ConfEagerSource";
-import {ConfEagerErrors} from "../src/ConfEagerErrors";
 import * as fs from "fs";
 import * as yaml from "yamljs";
+import {ConfEagerSources} from "../src/ConfEagerSource";
+import {exposed} from "smoke-screen";
 import EnvironmentVariables = ConfEagerSources.EnvironmentVariables;
 import Combinator = ConfEagerSources.Combinator;
 import JsonFile = ConfEagerSources.JsonFile;
 import YamlFile = ConfEagerSources.YamlFile;
 import PropertiesFile = ConfEagerSources.PropertiesFile;
-import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
+import StubSource = ConfEagerSources.StubSource;
 
 describe("Test out-of-the-box sources", () => {
+
+    class Conf {
+
+        @exposed
+        readonly property: string;
+
+    }
 
     describe("Test file sources", () => {
 
@@ -30,36 +34,23 @@ describe("Test out-of-the-box sources", () => {
 
         describe("Test JSON file source", () => {
 
-            it('Test JSON file success', () => {
+            it("Test JSON file success", () => {
 
-                class Conf extends ConfEager {
-
-                    readonly property = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile(JSON.stringify({"property": true}));
+                writeFile(JSON.stringify({property: "json value"}));
                 const source = new JsonFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
+                const conf = source.create(Conf);
+                expect(conf.property).to.equal("json value");
+                source.close();
                 cleanFile();
 
             });
 
-            it('Test JSON file failure', () => {
+            it("Test JSON file failure", () => {
 
-                class Conf extends ConfEager {
-
-                    // noinspection JSUnusedGlobalSymbols
-                    readonly missingProperty = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile("{}");
+                writeFile(JSON.stringify({}));
                 const source = new JsonFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+                expect(() => source.create(Conf)).to.throw(Error);
+                source.close();
                 cleanFile();
 
             });
@@ -68,36 +59,23 @@ describe("Test out-of-the-box sources", () => {
 
         describe("Test YAML file source", () => {
 
-            it('Test YAML file success', () => {
+            it("Test YAML file success", () => {
 
-                class Conf extends ConfEager {
-
-                    readonly property = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile(yaml.stringify({"property": true}));
+                writeFile(yaml.stringify({property: "yaml value"}));
                 const source = new YamlFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
+                const conf = source.create(Conf);
+                expect(conf.property).to.equal("yaml value");
+                source.close();
                 cleanFile();
 
             });
 
-            it('Test YAML file failure', () => {
-
-                class Conf extends ConfEager {
-
-                    // noinspection JSUnusedGlobalSymbols
-                    readonly missingProperty = new ConfEagerProperties.Boolean();
-
-                }
+            it("Test YAML file failure", () => {
 
                 writeFile(yaml.stringify({}));
                 const source = new YamlFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+                expect(() => source.create(Conf)).to.throw(Error);
+                source.close();
                 cleanFile();
 
             });
@@ -106,36 +84,23 @@ describe("Test out-of-the-box sources", () => {
 
         describe("Test properties file source", () => {
 
-            it('Test properties file success', () => {
+            it("Test properties file success", () => {
 
-                class Conf extends ConfEager {
-
-                    readonly property = new ConfEagerProperties.Boolean();
-
-                }
-
-                writeFile("property = true");
+                writeFile("property = props value");
                 const source = new PropertiesFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                source.bind(conf);
-                expect(conf.property.get()).to.equal(true);
+                const conf = source.create(Conf);
+                expect(conf.property).to.equal("props value");
+                source.close();
                 cleanFile();
 
             });
 
-            it('Test properties file failure', () => {
-
-                class Conf extends ConfEager {
-
-                    // noinspection JSUnusedGlobalSymbols
-                    readonly missingProperty = new ConfEagerProperties.Boolean();
-
-                }
+            it("Test properties file failure", () => {
 
                 writeFile("");
                 const source = new PropertiesFile(TEST_FILE_NAME, 0);
-                const conf = new Conf();
-                expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+                expect(() => source.create(Conf)).to.throw(Error);
+                source.close();
                 cleanFile();
 
             });
@@ -146,77 +111,35 @@ describe("Test out-of-the-box sources", () => {
 
     describe("Test environment variables", () => {
 
-        it('Test environment variable success', () => {
+        it("Test environment variable success", () => {
 
-            class Conf extends ConfEager {
-
-                readonly property = new ConfEagerProperties.Boolean();
-
-            }
-
-            process.env["property"] = "true";
+            process.env.property = "env value";
             const source = new EnvironmentVariables();
-            const conf = new Conf();
-            source.bind(conf);
-            expect(conf.property.get()).to.equal(true);
+            const conf = source.create(Conf);
+            expect(conf.property).to.equal("env value");
 
         });
 
-        it('Test environment variable failure', () => {
+        it("Test environment variable failure", () => {
 
-            class Conf extends ConfEager {
-
-                // noinspection JSUnusedGlobalSymbols
-                readonly property = new ConfEagerProperties.Boolean();
-
-            }
-
-            delete process.env["property"]; // in any case...
+            delete process.env.property; // in any case...
             const source = new EnvironmentVariables();
-            const conf = new Conf();
-            expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+            expect(() => source.create(Conf)).to.throw(Error);
 
         });
 
     });
 
-    it('Test source combinator', () => {
+    it("Test source combinator", () => {
 
-        let visitedEmptySource = false;
-
-        class EmptySource extends ConfEagerSource {
-
-            // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
-            protected get(_path: string[]): string | null | undefined {
-                visitedEmptySource = true;
-                return null;
-            }
-
-        }
-
-        class NonEmptySource extends ConfEagerSource {
-
-            // noinspection JSUnusedLocalSymbols,JSMethodCanBeStatic,JSUnusedGlobalSymbols
-            protected get(_path: string[]): string | null | undefined {
-                expect(visitedEmptySource).to.equal(true);
-                return "true";
-            }
-
-        }
-
-        class Conf extends ConfEager {
-
-            readonly property = new ConfEagerProperties.Boolean();
-
-        }
-
-        const source = new Combinator(
-            new EmptySource(),
-            new NonEmptySource()
-        );
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+        const src1 = new StubSource({property: true});
+        const src2 = new StubSource({property: false});
+        let source = new Combinator(src1, src2);
+        let conf = source.create(Conf);
+        expect(conf.property).to.equal(true);
+        source = new Combinator(src2, src1);
+        conf = source.create(Conf);
+        expect(conf.property).to.equal(false);
 
     });
 

@@ -1,7 +1,10 @@
-import {ConfEager} from "./ConfEager";
-import {ConfEagerProperty} from "./ConfEagerProperty";
-import {ConfEagerErrors} from "./ConfEagerErrors";
-import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
+import {Constructable, SmokeScreen} from "smoke-screen";
+import * as fs from "fs";
+import * as util from "util";
+import * as yaml from "yamljs";
+import * as properties from "properties";
+
+const SMOKE_SCREEN = new SmokeScreen();
 
 /**
  * Represents a source of configuration,
@@ -9,108 +12,217 @@ import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
  * or any other source.
  *
  * A fully customized configuration source may be created by implementing
- * ConfEagerSource.get method, which returns a string value of a given
- * configuration property key, and implementing ConfEagerSource.notifyUpdate
- * whenever the data in the source has changed.
+ * ConfEagerSource.getData method, which returns the currently updated data
+ * object of the source, and by calling the inherited ConfEagerSource.notifyUpdate
+ * method whenever the data in the source has changed.
  * The latter will automatically update all the ConfEager classes that
  * are bound to this source.
  */
 export abstract class ConfEagerSource {
 
-    // Fields
+    private readonly _boundInstances: any[] = [];
 
-    private readonly _confEagerMapping = new Map<ConfEager, ConfEagerProperty<any>[]>();
-
-    private readonly _onUpdateListeners: (() => void)[] = [];
-
-    // Public
+    /**
+     * Receive a class contains @exposed fields, instantiate it, binds it
+     * and returns the newly create bound instance.
+     * Whenever the source changes, all bound instances are automatically updated.
+     *
+     * @param {Constructable<T>} configurationClass     the class to instantiate
+     * @returns {T}                                     the bound instance
+     */
+    create<T>(configurationClass: Constructable<T>) {
+        const instance = new configurationClass();
+        this.bind(instance);
+        return instance;
+    }
 
     /**
      * Receive a ConfEager instance and bind it to the current source.
      * Whenever the source changes, all bound instances are automatically updated.
      *
-     * @param {ConfEager} confEagerObject   instance to bind
+     * @param instance  instance to bind
      */
-    bind(confEagerObject: ConfEager): void {
-        if (!this._confEagerMapping.get(confEagerObject)) {
-            const properties: ConfEagerProperty<any>[] = [];
-            for (const key of Object.keys(confEagerObject)) {
-                const property = (confEagerObject as any)[key];
-                if (!property) {
-                    continue;
-                }
-                if (property instanceof ConfEagerProperty) {
-                    (property as any)._reportPropertyKey(key);
-                    properties.push(property);
-                }
-                if (property instanceof ConfEager) {
-                    const currentKeys = (property as any).pathKeys();
-                    if (currentKeys.length == 0) {
-                        const newKeys = (confEagerObject as any).pathKeys();
-                        newKeys.push(key);
-                        (property as any).pathKeys = () => newKeys;
-                    }
-                    this.bind(property);
-                }
-            }
-            this._populate(confEagerObject, properties);
-            this._confEagerMapping.set(confEagerObject, properties);
-        }
+    bind(instance: any) {
+        SMOKE_SCREEN.updateFromObject(this.getData(), instance);
+        this._boundInstances.push(instance);
     }
-
-    /**
-     * Registers a listener to be called whenever the source is updated
-     * @param {() => void} listener to call
-     */
-    onUpdate(listener: () => void) {
-        this._onUpdateListeners.push(listener);
-    }
-
-    // Private
 
     /**
      * Should be called whenever the source data changes,
      * triggers a re-population of  all bound ConfEager instances.
      */
     protected notifyUpdate(): void {
-        for (const [key, value] of this._confEagerMapping) {
-            this._populate(key, value);
-        }
-        for (const listener of this._onUpdateListeners) {
-            listener();
+        for (const instance of this._boundInstances) {
+            SMOKE_SCREEN.updateFromObject(this.getData(), instance);
         }
     }
 
     /**
-     * Extracts the String value of a property.
-     * To return an array or an object, a JSON representation string
-     * should be returned (i.e. "[1, 2, 3]" for array,
-     * "{\"key\": \"value\"}" for object.
-     *
-     * @param {string[]} path  the path of keys of the requested value
-     * @returns {string}
-     * @private
+     * @returns {{[p: string]: any}}    a JS object containing all the parsed
+     *                                  data in the source
      */
-    protected abstract get(path: string[]): string | null | undefined;
+    protected abstract getData(): { [key: string]: any };
 
-    private _populate(instance: ConfEager, properties: ConfEagerProperty<any>[]): void {
-        const missingProperties: string[] = [];
-        for (const property of properties) {
-            const path = (instance as any).pathKeys();
-            path.push((property as any)._getPropertyKey());
-            const value = this.get(path);
-            if (value === null || typeof value == "undefined") {
-                if ((property as any)._isRequired()) {
-                    missingProperties.push("`" + path.join(".") + "`");
+}
+
+/**
+ * Out of the box configuration sources.
+ */
+export namespace ConfEagerSources {
+
+    /**
+     * Abstract base class for implementation of file based sources
+     */
+    export abstract class FileSource extends ConfEagerSource {
+
+        private _data: { [key: string]: any };
+
+        constructor(private readonly _filename: string,
+                    private readonly _watchInterval: number,
+                    private readonly _encoding: string | null = null) {
+            super();
+            this.triggerUpdate();
+            if (this._watchInterval > 0) {
+                fs.watchFile(
+                    this._filename,
+                    {interval: this._watchInterval},
+                    this.listener
+                );
+            }
+        }
+
+        close() {
+            fs.unwatchFile(this._filename, this.listener);
+        }
+
+        protected abstract parse(content: string): { [key: string]: any };
+
+        protected getData(): { [p: string]: any } {
+            return this._data;
+        }
+
+        private listener = () => this.triggerUpdate();
+
+        private triggerUpdate() {
+            const fileContents = fs
+                .readFileSync(this._filename, {encoding: this._encoding})
+                .toString();
+            try {
+                this._data = this.parse(fileContents);
+            } catch (e) {
+                throw new Error(util.format(
+                    "could not parse configuration file %s, with value %s",
+                    this._filename, fileContents));
+            }
+            this.notifyUpdate();
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from JSON files
+     */
+    export class JsonFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return JSON.parse(content);
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from YAML files (*.yaml | *.yml)
+     */
+    export class YamlFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return yaml.parse(content);
+        }
+
+    }
+
+    /**
+     * Out of the box source to read from properties files (*.properties)
+     */
+    export class PropertiesFile extends FileSource {
+
+        constructor(filename: string, watchInterval: number,
+                    encoding: string | null = null) {
+            super(filename, watchInterval, encoding);
+        }
+
+        protected parse(content: string) {
+            return properties.parse(content, {path: false});
+        }
+
+    }
+
+    /**
+     * Out of the box source to map Environment Variables
+     */
+    export class EnvironmentVariables extends ConfEagerSource {
+
+        protected getData(): { [p: string]: any } {
+            return process.env;
+        }
+
+    }
+
+    /**
+     * Out of the box source to receive other sources prioritizes from
+     * high to low, and combine them together, where a higher priority
+     * source may override values of a lower priority one.
+     */
+    export class Combinator extends ConfEagerSource {
+
+        private readonly _sources: ConfEagerSource[];
+
+        constructor(...sources: ConfEagerSource[]) {
+            super();
+            this._sources = sources;
+        }
+
+        protected getData(): { [key: string]: any } {
+            const result: { [key: string]: any } = {};
+            for (let i = this._sources.length - 1; i >= 0; i--) {
+                const data = (this._sources[i] as any).getData();
+                for (const key of Object.keys(data)) {
+                    result[key] = data[key];
                 }
             }
-            else {
-                (property as any)._update(value.toString());
-            }
+            return result;
         }
-        if (missingProperties.length > 0) {
-            throw new MissingPropertiesError(missingProperties);
+
+    }
+
+    /**
+     * Out of the box source to map a given data object
+     */
+    export class StubSource extends ConfEagerSource {
+
+        constructor(private _data: { [p: string]: any }) {
+            super();
         }
+
+        update(data: { [p: string]: any }) {
+            this._data = data;
+            this.notifyUpdate();
+        }
+
+        protected getData(): { [p: string]: any } {
+            return this._data;
+        }
+
     }
 
 }

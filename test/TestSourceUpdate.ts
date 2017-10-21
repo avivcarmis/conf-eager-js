@@ -1,45 +1,28 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEagerSource} from "../src/ConfEagerSource";
-import {ConfEager} from "../src/ConfEager";
-import {ConfEagerProperties} from "../src/ConfEagerProperties";
+import {ConfEagerSources} from "../src/ConfEagerSource";
+import {exposed} from "smoke-screen";
+import StubSource = ConfEagerSources.StubSource;
 
 describe("Test update behaviour", () => {
 
-    it('Test simple update', () => {
+    it("Test simple update", () => {
 
-        class Source extends ConfEagerSource {
+        class Conf {
 
-            constructor(private value: string) {
-                super();
-            }
-
-            updateValue(value: string): void {
-                this.value = value;
-                this.notifyUpdate();
-            }
-
-            // noinspection JSUnusedLocalSymbols, JSUnusedGlobalSymbols
-            protected get(_path: string[]): string | null | undefined {
-                return this.value;
-            }
-
-        }
-
-        class Conf extends ConfEager {
-
-            readonly property = new ConfEagerProperties.String();
+            @exposed
+            readonly property: string;
 
         }
 
         const VALUE1 = "VALUE1";
         const VALUE2 = "VALUE2";
-        const source = new Source(VALUE1);
+        const source = new StubSource({property: VALUE1});
         const conf = new Conf();
         source.bind(conf);
-        expect(conf.property.get()).to.equal(VALUE1);
-        source.updateValue(VALUE2);
-        expect(conf.property.get()).to.equal(VALUE2);
+        expect(conf.property).to.equal(VALUE1);
+        source.update({property: VALUE2});
+        expect(conf.property).to.equal(VALUE2);
 
     });
 

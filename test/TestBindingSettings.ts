@@ -1,61 +1,30 @@
 import "mocha";
 import {expect} from "chai";
-import {ConfEager} from "../src/ConfEager";
-import {ConfEagerProperties} from "../src/ConfEagerProperties";
-import {ConfEagerErrors} from "../src/ConfEagerErrors";
-import {ConfEagerSources} from "../src/ConfEagerSources";
-import MissingPropertiesError = ConfEagerErrors.MissingPropertiesError;
+import {ConfEagerSources} from "../src/ConfEagerSource";
+import {exposed} from "smoke-screen";
 import StubSource = ConfEagerSources.StubSource;
 
 describe("Test binding settings", () => {
 
-    it('Test simple binding', () => {
+    class Conf {
 
-        class Conf extends ConfEager {
+        @exposed
+        readonly property: boolean;
 
-            readonly property = new ConfEagerProperties.Boolean();
+    }
 
-        }
+    it("Test simple binding", () => {
 
-        const source = new StubSource({"property": "true"});
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
-
-    });
-
-    it('Test configuration pathKeys', () => {
-
-        class Conf extends ConfEager {
-
-            readonly property = new ConfEagerProperties.Boolean();
-
-            // noinspection JSMethodCanBeStatic, JSUnusedGlobalSymbols
-            protected pathKeys(): string[] {
-                return ["some", "prefix"];
-            }
-
-        }
-
-        const source = new StubSource({"some": {"prefix": {"property": "true"}}});
-        const conf = new Conf();
-        source.bind(conf);
-        expect(conf.property.get()).to.equal(true);
+        const source = new StubSource({property: true});
+        const conf = source.create(Conf);
+        expect(conf.property).to.equal(true);
 
     });
 
-    it('Test missing property', () => {
-
-        class Conf extends ConfEager {
-
-            // noinspection JSUnusedGlobalSymbols
-            readonly property = new ConfEagerProperties.Boolean();
-
-        }
+    it("Test missing property", () => {
 
         const source = new StubSource({});
-        const conf = new Conf();
-        expect(() => source.bind(conf)).to.throw(MissingPropertiesError);
+        expect(() => source.create(Conf)).to.throw(Error);
 
     });
 

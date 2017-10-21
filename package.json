@@ -1,6 +1,6 @@
 {
   "name": "confeager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Strongly typed eager-initialization configuration library for JavaScript",
   "engines": {
     "node": ">=6.11.2"
@@ -11,9 +11,12 @@
     "test": "test"
   },
   "scripts": {
+    "clean": "rm -rf dist",
+    "compile": "tsc -p .",
+    "clean-compile": "npm run clean && npm run compile",
+    "lint": "tslint -c tslint.json 'src/**/*.ts' && tslint -c tslint.json 'test/**/*.ts'",
     "test": "mocha dist/test",
-    "compile": "npm run clean && tsc -p .",
-    "clean": "rm -rf dist"
+    "build-pipeline": "npm run clean-compile && npm run lint && npm test"
   },
   "repository": {
     "type": "git",
@@ -35,18 +38,18 @@
   "homepage": "https://github.com/avivcarmis/conf-eager-js#readme",
   "dependencies": {
     "properties": "^1.2.1",
+    "smoke-screen": "^1.0.4",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
     "@types/chai": "^4.0.4",
-    "@types/chai-http": "^3.0.3",
     "@types/mocha": "^2.2.43",
     "@types/node": "^8.0.28",
     "@types/yamljs": "^0.2.30",
     "chai": "^4.1.2",
-    "chai-http": "^3.0.0",
     "mocha": "^3.5.3",
     "ts-node": "^3.3.0",
+    "tslint": "^5.7.0",
     "typescript": "^2.5.2"
   }
 }
