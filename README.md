@@ -11,6 +11,10 @@ Installation via NPM:
 
 `$ npm install confeager --save`
 
+> Comparability Note: ConfEagerJS uses [Smoke Screen library](https://www.npmjs.com/package/smoke-screen "Smoke Screen library")
+to define and validate object schemas and types at runtime. This requires usage of 
+EcmaScript decorators. While EcmaScript doesn't officially support decorators yet, the examples below are implemented in TypeScript, but may also be implemented in any other way that compiles decorators.
+
 Consider a YAML configuration file `config.yaml`:
 ```yaml
 host: 0.0.0.0           # string
@@ -24,144 +28,70 @@ arrayConfiguration:     # array
   - 2345
 ```
 
-Then a consumer written in JavaScript (followed by TypeScript):
-```javascript
-const confeager = require("confeager");
-const {ConfEager, ConfEagerProperties, ConfEagerSources} = confeager;
-
-const LogLevel = {
-    INFO: 0, WARN: 1, ERROR: 2
-};
-
-class Configuration extends ConfEager {
-    
-    constructor() {
-        
-        super();
-        
-        // string property
-        this.host = new ConfEagerProperties.String();
-        
-        // number property
-        this.port = new ConfEagerProperties.Number();
-        
-        // boolean property with an explicit key,
-        // note that the class property is called `useHttps`,
-        // but the config property is called `https`
-        this.useHttps = new ConfEagerProperties.Boolean().withPropertyKey("https");
-        
-        // enum property of enum class LogLevel
-        // valid values may only be `INFO`, `WARN` or `ERROR`
-        this.logLevel = new ConfEagerProperties.Enum(LogLevel);
-        
-        // complex property
-        this.nestedConfiguration = new NestedConfiguration();
-        
-        // number array property
-        this.arrayConfiguration = new ConfEagerProperties.NumberArray();
-        
-        // all other properties are required and their absence
-        // from the source will cause an error on init,
-        // this property is optional and when absent will be
-        // populated with the value "value"
-        this.optionalProperty = new ConfEagerProperties.String().withDefaultValue("value");
-    }
-}
-
-class NestedConfiguration extends ConfEager {
-    
-    constructor() {
-        super();
-        this.nestedProperty = new ConfEagerProperties.Number();
-    }
-    
-}
-
-// load config data from a yaml file with a watch interval of
-// 10 milliseconds, when source update is detected,
-// all the in-memory properties are immediately updated too.
-const source = new ConfEagerSources.YamlFile("config.yaml", 10);
-
-const conf = new Configuration();
-
-// populate data from the source to the configuration instance
-// and bind for updates
-source.bind(conf);
-
-// that's it, let's use it!
-conf.host.get();                                // => "0.0.0.0"
-conf.port.get();                                // => 8080
-conf.useHttps.get();                            // => false
-conf.logLevel.get();                            // => LogLevel.INFO
-conf.nestedConfiguration.nestedProperty.get();  // => 1234
-conf.arrayConfiguration.get();                  // => [1234, 2345]
-conf.optionalProperty.get();                    // => "value"
-```
-Or a consumer writtem in TypeScript:
-
+Then a consumer written in TypeScript:
 ```typescript
-import {ConfEager, ConfEagerProperties, ConfEagerSources} from "confeager";
+import {exposed, PropertyTypes} from "smoke-screen";
+import {ConfEagerSources} from "confeager";
 
 enum LogLevel {
     INFO, WARN, ERROR
 }
 
-class Configuration extends ConfEager{
+class NestedConfiguration {
 
-    // string property
-    readonly host = new ConfEagerProperties.String();
+    @exposed({type: PropertyTypes.number})
+    readonly nestedProperty: number;
 
-    // number property
-    readonly port = new ConfEagerProperties.Number();
+}
 
-    // boolean property with an explicit key,
-    // note that the class property is called `useHttps`,
-    // but the config property is called `https`
-    readonly useHttps = new ConfEagerProperties.Boolean().withPropertyKey("https");
+class Configuration {
+
+    @exposed({type: PropertyTypes.string})
+    readonly host: string;
+
+    @exposed({type: PropertyTypes.number})
+    readonly port: number;
+
+    // note the following property, it's called `useHttps` but exposed as `https`:    
+    @exposed({as: "https", type: PropertyTypes.number})
+    readonly useHttps: boolean;
 
     // enum property of enum class LogLevel
     // valid values may only be `INFO`, `WARN` or `ERROR`
-    readonly logLevel = new ConfEagerProperties.Enum(LogLevel);
+    @exposed({type: PropertyTypes.enumOf(LogLevel)})
+    readonly logLevel: LogLevel;
 
-    // complex property
-    readonly nestedConfiguration = new NestedConfiguration();
+    @exposed({type: PropertyTypes.objectOf(NestedConfiguration)})
+    readonly nestedConfiguration: NestedConfiguration;
 
-    // number array property
-    readonly arrayConfiguration = new ConfEagerProperties.NumberArray();
+    @exposed({type: PropertyTypes.arrayOf(PropertyTypes.number)})
+    readonly arrayConfiguration: number[];
 
     // all other properties are required and their absence
     // from the source will cause an error on init,
     // this property is optional and when absent will be
     // populated with the value "value"
-    readonly optionalProperty = new ConfEagerProperties.String().withDefaultValue("value");
-
-}
-
-class NestedConfiguration extends ConfEager {
-
-    readonly nestedProperty = new ConfEagerProperties.Number();
+    @exposed({type: PropertyTypes.string, defaultValue: "value"})
+    readonly optionalProperty: string;
 
 }
 
 // load config data from a yaml file with a watch interval of
-// 10 milliseconds, when source update is detected,
-// all the in-memory properties are immediately updated too.
+// 10 milliseconds into a conf eager source.
 const source = new ConfEagerSources.YamlFile("config.yaml", 10);
-
-const conf = new Configuration();
-
-// populate data from the source to the configuration instance
-// and bind for updates
-source.bind(conf);
+// now use the source to instantiate a configuration object
+// and bind it to the source, so that when the source data
+// updated, the configuration instance immidietaly gets updated too.
+const conf = source.create(Configuration);
 
 // that's it, let's use it!
-conf.host.get();                                // => "0.0.0.0"
-conf.port.get();                                // => 8080
-conf.useHttps.get();                            // => false
-conf.logLevel.get();                            // => LogLevel.INFO
-conf.nestedConfiguration.nestedProperty.get();  // => 1234
-conf.arrayConfiguration.get();                  // => [1234, 2345]
-conf.optionalProperty.get();                    // => "value"
+conf.host;                                // => "0.0.0.0"
+conf.port;                                // => 8080
+conf.useHttps;                            // => false
+conf.logLevel;                            // => LogLevel.INFO
+conf.nestedConfiguration.nestedProperty;  // => 1234
+conf.arrayConfiguration;                  // => [1234, 2345]
+conf.optionalProperty;                    // => "value"
 ```
 
 Full documentation can be found on the project [WIKI on GitHub](https://github.com/avivcarmis/conf-eager-js/wiki "WIKI on GitHub").
@@ -169,7 +99,8 @@ Full documentation can be found on the project [WIKI on GitHub](https://github.c
 ## Why?
 ConfEagerJS is designed with two main charachteristics: being eager and being strongly-typed. This is a very powerful combination that provides a few main advantages.
 
-As opposed to popular configuration libraries ConfEagerJS provides you with an interface for declaring your exact expectations from the configuration data. In addition, properties are eagerly loaded and validated. This combination renders a system that validates your entire configuration data source at boot time. The existance and value validity of each property in the source is validated immidiately. This also means no need to check for `null` and no null pointer errors either. This means no more typos when reading from the configuration, and most importantly, this means that to discover these kind of bugs you do not have to discover the exact control flow that triggers it, but rather let ConfEager find it for you when it loads.
+As opposed to popular configuration libraries, ConfEagerJS provides you with an 
+interface for declaring your exact expectations from the configuration data. In addition, properties are eagerly loaded and validated. This combination renders a system that validates your entire configuration data source at boot time. The existance and value validity of each property in the source is validated immidiately. This also means no need to check for `null` and no null pointer errors either. This means no more typos when reading from the configuration, and most importantly, this means that to discover these kind of bugs you do not have to discover the exact control flow that triggers it, but rather let ConfEager find it for you when it loads.
 
 Additionally, ConfEagerJS is aimed to provide simple means to easily implement any data source you like, seamlessly get data updates from it without the need to restart your application, and consume any property type you would like from it.
 
